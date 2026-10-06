@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # livestock_health_app
 
 A new Flutter project.
@@ -15,3 +16,7 @@ A few resources to get you started if this is your first Flutter project:
 For help getting started with Flutter development, view the
 [online documentation](https://docs.flutter.dev/), which offers tutorials,
 samples, guidance on mobile development, and a full API reference.
+=======
+# livestock-health-app
+Livestock Health Tracking &amp; Vet Consultation App - Flutter
+>>>>>>> fc3a4665a6f2f52a95e2eec956791cbf9320c092
