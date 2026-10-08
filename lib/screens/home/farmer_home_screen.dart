@@ -6,6 +6,10 @@ import 'package:flutter/material.dart';
 import '../vet_booking/find_vet_screen.dart';
 import '../vet_booking/my_appointments_screen.dart';
 import '../vet_booking/farmer_profile_screen.dart';
+import '../farmer/my_animals_screen.dart';
+
+import '../../features/health_reminder/screens/notification_screen.dart';
+import '../../features/health_reminder/screens/reminders_screen.dart';
 
 class FarmerHomeScreen extends StatefulWidget {
   final String userName;
@@ -96,7 +100,24 @@ class _FarmerHomeScreenState extends State<FarmerHomeScreen> {
   }
 
   void _openMyAnimals() {
-    _comingSoon('My Animals');
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const MyAnimalsScreen()),
+    );
+  }
+
+  void _openNotifications() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const NotificationScreen()),
+    );
+  }
+
+  void _openReminders() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const RemindersScreen()),
+    );
   }
 
   void _openHealthGuide(int index) {
@@ -174,8 +195,7 @@ class _FarmerHomeScreenState extends State<FarmerHomeScreen> {
                                   clipBehavior: Clip.none,
                                   children: [
                                     IconButton(
-                                      onPressed: () =>
-                                          _comingSoon('Notifications'),
+                                      onPressed: _openNotifications,
                                       padding: EdgeInsets.zero,
                                       constraints: const BoxConstraints(),
                                       icon: const Icon(
@@ -335,7 +355,7 @@ class _FarmerHomeScreenState extends State<FarmerHomeScreen> {
                             backgroundColor: const Color(0xFFEAF0F6),
                             iconBackground: const Color(0xFFDCE6F0),
                             iconColor: const Color(0xFF466A89),
-                            onTap: () => _comingSoon('Recent Reminder'),
+                            onTap: _openReminders,
                           ),
                           const SizedBox(height: 25),
                         ],
