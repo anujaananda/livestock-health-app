@@ -7,6 +7,11 @@ import '../widgets/vaccination_history_tab.dart';
 import '../widgets/medical_records_tab.dart';
 import 'add_health_record_screen.dart';
 
+import '../../../screens/home/farmer_home_screen.dart';
+import '../../../screens/vet_booking/find_vet_screen.dart';
+import '../../../screens/vet_booking/my_appointments_screen.dart';
+import '../../../screens/vet_booking/farmer_profile_screen.dart';
+
 class AnimalProfileScreen extends StatefulWidget {
   final Map<String, dynamic> animal;
 
@@ -19,17 +24,50 @@ class AnimalProfileScreen extends StatefulWidget {
 class _AnimalProfileScreenState extends State<AnimalProfileScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
+  int _refreshKey = 0;
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 4, vsync: this);
+    _tabController.addListener(() {
+      setState(() {});
+    });
   }
 
   @override
   void dispose() {
     _tabController.dispose();
     super.dispose();
+  }
+
+  void _openFarmerHome() {
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (context) => const FarmerHomeScreen()),
+      (route) => false,
+    );
+  }
+
+  void _openFindVet() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const FindVetScreen()),
+    );
+  }
+
+  void _openMyAppointments() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const MyAppointmentsScreen()),
+    );
+  }
+
+  void _openFarmerProfile() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const FarmerProfileScreen()),
+    );
   }
 
   @override
@@ -77,7 +115,10 @@ class _AnimalProfileScreenState extends State<AnimalProfileScreen>
             child: TabBarView(
               controller: _tabController,
               children: [
-                HealthStatusTab(animal: widget.animal),
+                HealthStatusTab(
+                  key: ValueKey('health_status_$_refreshKey'),
+                  animal: widget.animal,
+                ),
                 TreatmentHistoryTab(animal: widget.animal),
                 VaccinationHistoryTab(animal: widget.animal),
                 MedicalRecordsTab(animal: widget.animal),
@@ -86,21 +127,69 @@ class _AnimalProfileScreenState extends State<AnimalProfileScreen>
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () async {
-          await Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => AddHealthRecordScreen(
-                animalId: widget.animal['id'].toString(),
-              ),
-            ),
-          );
-          // Refresh state if needed
-          setState(() {});
+      floatingActionButton: _tabController.index == 0
+          ? FloatingActionButton(
+              onPressed: () async {
+                final result = await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) =>
+                        AddHealthRecordScreen(animal: widget.animal),
+                  ),
+                );
+                if (result == true) {
+                  setState(() {
+                    _refreshKey++;
+                  });
+                }
+              },
+              backgroundColor: Colors.green,
+              child: const Icon(Icons.add, color: Colors.white),
+            )
+          : null,
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: 1, // Animals is active
+        type: BottomNavigationBarType.fixed,
+        backgroundColor: Colors.white,
+        selectedItemColor: const Color(0xFF20B769), // primaryGreen from home
+        unselectedItemColor: const Color(0xFF7D8B83),
+        selectedFontSize: 11,
+        unselectedFontSize: 11,
+        onTap: (index) {
+          if (index == 0) {
+            _openFarmerHome();
+          } else if (index == 1) {
+            Navigator.pop(context); // Go back to My Animals screen
+          } else if (index == 2) {
+            _openFindVet();
+          } else if (index == 3) {
+            _openMyAppointments();
+          } else if (index == 4) {
+            _openFarmerProfile();
+          }
         },
-        backgroundColor: Colors.green,
-        child: const Icon(Icons.add, color: Colors.white),
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home_rounded),
+            label: 'Home',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.pets_rounded),
+            label: 'Animals',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.medical_services_outlined),
+            label: 'Consult',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.calendar_month_outlined),
+            label: 'Appointments',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person_outline_rounded),
+            label: 'Profile',
+          ),
+        ],
       ),
     );
   }
