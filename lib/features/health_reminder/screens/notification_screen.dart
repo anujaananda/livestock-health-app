@@ -106,6 +106,15 @@ class _NotificationScreenState extends State<NotificationScreen> {
               ),
               const SizedBox(height: 24),
             ],
+            if (todayNotifications.isEmpty && earlierNotifications.isEmpty) ...[
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 24.0),
+                child: Text(
+                  'No notifications found.',
+                  style: TextStyle(color: Colors.grey),
+                ),
+              ),
+            ],
 
             // Notification Helper Text
             Container(

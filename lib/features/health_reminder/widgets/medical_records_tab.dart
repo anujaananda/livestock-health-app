@@ -5,7 +5,9 @@ import '../models/models.dart';
 import '../data/local_data.dart';
 
 class MedicalRecordsTab extends StatefulWidget {
-  const MedicalRecordsTab({super.key});
+  final DemoAnimal animal;
+
+  const MedicalRecordsTab({super.key, required this.animal});
 
   @override
   State<MedicalRecordsTab> createState() => _MedicalRecordsTabState();
@@ -51,7 +53,7 @@ class _MedicalRecordsTabState extends State<MedicalRecordsTab> {
                     _data.addMedicalRecord(
                       MedicalRecord(
                         id: DateTime.now().millisecondsSinceEpoch.toString(),
-                        animalId: _data.currentAnimal.id,
+                        animalId: widget.animal.id,
                         title: titleCtrl.text,
                         date: DateTime.now(),
                       ),
@@ -119,7 +121,9 @@ class _MedicalRecordsTabState extends State<MedicalRecordsTab> {
 
   @override
   Widget build(BuildContext context) {
-    final records = _data.medicalRecords;
+    final records = _data.medicalRecords
+        .where((r) => r.animalId == widget.animal.id)
+        .toList();
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16.0),
       child: Column(
@@ -160,106 +164,124 @@ class _MedicalRecordsTabState extends State<MedicalRecordsTab> {
             ),
           ),
           const SizedBox(height: 16),
-          ListView.separated(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: records.length,
-            separatorBuilder: (context, index) => const Divider(),
-            itemBuilder: (context, index) {
-              final r = records[index];
-              return Padding(
-                padding: const EdgeInsets.symmetric(vertical: 8.0),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    const Icon(Icons.description, color: Colors.grey, size: 24),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+          records.isEmpty
+              ? const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 24.0),
+                  child: Text(
+                    'No medical records found.',
+                    style: TextStyle(color: Colors.grey),
+                  ),
+                )
+              : ListView.separated(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: records.length,
+                  separatorBuilder: (context, index) => const Divider(),
+                  itemBuilder: (context, index) {
+                    final r = records[index];
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 8.0),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
-                          Text(
-                            r.title,
-                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          const Icon(
+                            Icons.description,
+                            color: Colors.grey,
+                            size: 24,
                           ),
-                          const SizedBox(height: 4),
-                          Text(
-                            DateFormat('yyyy-MM-dd').format(r.date),
-                            style: const TextStyle(
-                              color: Colors.grey,
-                              fontSize: 12,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    TextButton(
-                      onPressed: () {
-                        showDialog(
-                          context: context,
-                          builder: (context) => AlertDialog(
-                            title: const Text('Medical Record Details'),
-                            content: Column(
-                              mainAxisSize: MainAxisSize.min,
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  'Record Name: ${r.title}',
+                                  r.title,
                                   style: const TextStyle(
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
-                                const SizedBox(height: 8),
+                                const SizedBox(height: 4),
                                 Text(
-                                  'Date: ${DateFormat('yyyy-MM-dd').format(r.date)}',
+                                  DateFormat('yyyy-MM-dd').format(r.date),
+                                  style: const TextStyle(
+                                    color: Colors.grey,
+                                    fontSize: 12,
+                                  ),
                                 ),
                               ],
                             ),
-                            actions: [
-                              TextButton(
-                                onPressed: () => Navigator.pop(context),
-                                child: const Text('Close'),
+                          ),
+                          TextButton(
+                            onPressed: () {
+                              showDialog(
+                                context: context,
+                                builder: (context) => AlertDialog(
+                                  title: const Text('Medical Record Details'),
+                                  content: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        'Record Name: ${r.title}',
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 8),
+                                      Text(
+                                        'Date: ${DateFormat('yyyy-MM-dd').format(r.date)}',
+                                      ),
+                                    ],
+                                  ),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () => Navigator.pop(context),
+                                      child: const Text('Close'),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            },
+                            style: TextButton.styleFrom(
+                              foregroundColor: Colors.green,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 8,
+                              ),
+                              backgroundColor: Colors.green[50],
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                            ),
+                            child: const Text('View'),
+                          ),
+                          PopupMenuButton<String>(
+                            icon: const Icon(
+                              Icons.more_vert,
+                              size: 20,
+                              color: Colors.grey,
+                            ),
+                            onSelected: (value) {
+                              if (value == 'edit') _showAddEditDialog(r);
+                              if (value == 'delete') _confirmDelete(r.id);
+                            },
+                            itemBuilder: (context) => [
+                              const PopupMenuItem(
+                                value: 'edit',
+                                child: Text('Edit'),
+                              ),
+                              const PopupMenuItem(
+                                value: 'delete',
+                                child: Text('Delete'),
                               ),
                             ],
                           ),
-                        );
-                      },
-                      style: TextButton.styleFrom(
-                        foregroundColor: Colors.green,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 8,
-                        ),
-                        backgroundColor: Colors.green[50],
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                        ),
+                        ],
                       ),
-                      child: const Text('View'),
-                    ),
-                    PopupMenuButton<String>(
-                      icon: const Icon(
-                        Icons.more_vert,
-                        size: 20,
-                        color: Colors.grey,
-                      ),
-                      onSelected: (value) {
-                        if (value == 'edit') _showAddEditDialog(r);
-                        if (value == 'delete') _confirmDelete(r.id);
-                      },
-                      itemBuilder: (context) => [
-                        const PopupMenuItem(value: 'edit', child: Text('Edit')),
-                        const PopupMenuItem(
-                          value: 'delete',
-                          child: Text('Delete'),
-                        ),
-                      ],
-                    ),
-                  ],
+                    );
+                  },
                 ),
-              );
-            },
-          ),
         ],
       ),
     );

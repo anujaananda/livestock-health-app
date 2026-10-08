@@ -79,9 +79,9 @@ class _AnimalProfileScreenState extends State<AnimalProfileScreen>
               controller: _tabController,
               children: [
                 HealthStatusTab(animal: widget.animal),
-                const TreatmentHistoryTab(),
-                const VaccinationHistoryTab(),
-                const MedicalRecordsTab(),
+                TreatmentHistoryTab(animal: widget.animal),
+                VaccinationHistoryTab(animal: widget.animal),
+                MedicalRecordsTab(animal: widget.animal),
               ],
             ),
           ),

@@ -5,7 +5,9 @@ import '../models/models.dart';
 import '../data/local_data.dart';
 
 class TreatmentHistoryTab extends StatefulWidget {
-  const TreatmentHistoryTab({super.key});
+  final DemoAnimal animal;
+
+  const TreatmentHistoryTab({super.key, required this.animal});
 
   @override
   State<TreatmentHistoryTab> createState() => _TreatmentHistoryTabState();
@@ -68,7 +70,7 @@ class _TreatmentHistoryTabState extends State<TreatmentHistoryTab> {
                     _data.addTreatment(
                       Treatment(
                         id: DateTime.now().millisecondsSinceEpoch.toString(),
-                        animalId: _data.currentAnimal.id,
+                        animalId: widget.animal.id,
                         date: DateTime.now(),
                         title: titleCtrl.text,
                         description: descCtrl.text,
@@ -138,7 +140,9 @@ class _TreatmentHistoryTabState extends State<TreatmentHistoryTab> {
 
   @override
   Widget build(BuildContext context) {
-    final treatments = _data.treatments;
+    final treatments = _data.treatments
+        .where((t) => t.animalId == widget.animal.id)
+        .toList();
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16.0),
       child: Column(
@@ -183,86 +187,100 @@ class _TreatmentHistoryTabState extends State<TreatmentHistoryTab> {
             ),
           ),
           const SizedBox(height: 16),
-          ListView.separated(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: treatments.length,
-            separatorBuilder: (context, index) => const Divider(),
-            itemBuilder: (context, index) {
-              final t = treatments[index];
-              return Padding(
-                padding: const EdgeInsets.symmetric(vertical: 8.0),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Icon(Icons.vaccines, color: Colors.grey, size: 24),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Column(
+          treatments.isEmpty
+              ? const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 24.0),
+                  child: Text(
+                    'No treatment records found.',
+                    style: TextStyle(color: Colors.grey),
+                  ),
+                )
+              : ListView.separated(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: treatments.length,
+                  separatorBuilder: (context, index) => const Divider(),
+                  itemBuilder: (context, index) {
+                    final t = treatments[index];
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 8.0),
+                      child: Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            DateFormat('yyyy-MM-dd').format(t.date),
-                            style: const TextStyle(
-                              color: Colors.grey,
-                              fontSize: 12,
+                          const Icon(
+                            Icons.vaccines,
+                            color: Colors.grey,
+                            size: 24,
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  DateFormat('yyyy-MM-dd').format(t.date),
+                                  style: const TextStyle(
+                                    color: Colors.grey,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  t.title,
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  t.description,
+                                  style: const TextStyle(
+                                    color: Colors.grey,
+                                    fontSize: 13,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
-                          const SizedBox(height: 4),
-                          Text(
-                            t.title,
-                            style: const TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            t.description,
-                            style: const TextStyle(
-                              color: Colors.grey,
-                              fontSize: 13,
-                            ),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              Text(
+                                t.status,
+                                style: const TextStyle(
+                                  color: Colors.green,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                ),
+                              ),
+                              PopupMenuButton<String>(
+                                icon: const Icon(
+                                  Icons.more_vert,
+                                  size: 20,
+                                  color: Colors.grey,
+                                ),
+                                onSelected: (value) {
+                                  if (value == 'edit') _showAddEditDialog(t);
+                                  if (value == 'delete') _confirmDelete(t.id);
+                                },
+                                itemBuilder: (context) => [
+                                  const PopupMenuItem(
+                                    value: 'edit',
+                                    child: Text('Edit'),
+                                  ),
+                                  const PopupMenuItem(
+                                    value: 'delete',
+                                    child: Text('Delete'),
+                                  ),
+                                ],
+                              ),
+                            ],
                           ),
                         ],
                       ),
-                    ),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        Text(
-                          t.status,
-                          style: const TextStyle(
-                            color: Colors.green,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 12,
-                          ),
-                        ),
-                        PopupMenuButton<String>(
-                          icon: const Icon(
-                            Icons.more_vert,
-                            size: 20,
-                            color: Colors.grey,
-                          ),
-                          onSelected: (value) {
-                            if (value == 'edit') _showAddEditDialog(t);
-                            if (value == 'delete') _confirmDelete(t.id);
-                          },
-                          itemBuilder: (context) => [
-                            const PopupMenuItem(
-                              value: 'edit',
-                              child: Text('Edit'),
-                            ),
-                            const PopupMenuItem(
-                              value: 'delete',
-                              child: Text('Delete'),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ],
+                    );
+                  },
                 ),
-              );
-            },
-          ),
         ],
       ),
     );
