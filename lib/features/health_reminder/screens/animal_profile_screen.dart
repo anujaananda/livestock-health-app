@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../models/models.dart';
 import '../widgets/animal_header.dart';
 import '../widgets/health_status_tab.dart';
 import '../widgets/treatment_history_tab.dart';
@@ -9,7 +8,7 @@ import '../widgets/medical_records_tab.dart';
 import 'add_health_record_screen.dart';
 
 class AnimalProfileScreen extends StatefulWidget {
-  final DemoAnimal animal;
+  final Map<String, dynamic> animal;
 
   const AnimalProfileScreen({super.key, required this.animal});
 
@@ -92,8 +91,9 @@ class _AnimalProfileScreenState extends State<AnimalProfileScreen>
           await Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) =>
-                  AddHealthRecordScreen(animalId: widget.animal.id),
+              builder: (context) => AddHealthRecordScreen(
+                animalId: widget.animal['id'].toString(),
+              ),
             ),
           );
           // Refresh state if needed

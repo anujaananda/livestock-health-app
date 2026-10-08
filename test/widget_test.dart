@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:farmcare_app/main.dart';
+import 'package:livestock_health_app/main.dart';
 
 void main() {
   testWidgets(

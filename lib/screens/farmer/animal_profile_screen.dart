@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'edit_animal_screen.dart';
+import '../../features/health_reminder/screens/animal_profile_screen.dart' as health;
 
 class AnimalProfileScreen extends StatefulWidget {
   final Map<String, dynamic> animal;
@@ -68,28 +69,11 @@ class _AnimalProfileScreenState
       return;
     }
 
-    // ==========================================================
-    // TEMPORARY
-    // ==========================================================
-    //
-    // Health Records member ge screen eka ready unama
-    // me kotasa replace karanna.
-    //
-    // Example:
-    //
-    // Navigator.push(
-    //   context,
-    //   MaterialPageRoute(
-    //     builder: (context) => HealthRecordsScreen(
-    //       animalId: animalId.toString(),
-    //     ),
-    //   ),
-    // );
-    //
-    // ==========================================================
-
-    _showMessage(
-      'Health Records will be connected here.',
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => health.AnimalProfileScreen(animal: _animal),
+      ),
     );
   }
 

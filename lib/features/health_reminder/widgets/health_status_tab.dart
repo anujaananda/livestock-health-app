@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
-import '../models/models.dart';
 import '../data/local_data.dart';
 import '../screens/add_health_record_screen.dart';
 
 class HealthStatusTab extends StatefulWidget {
-  final DemoAnimal animal;
+  final Map<String, dynamic> animal;
 
   const HealthStatusTab({super.key, required this.animal});
 
@@ -50,7 +49,7 @@ class _HealthStatusTabState extends State<HealthStatusTab> {
   Widget build(BuildContext context) {
     final animal = widget.animal;
     final records = _data.healthRecords
-        .where((r) => r.animalId == animal.id)
+        .where((r) => r.animalId == animal['id'].toString())
         .toList();
     records.sort((a, b) => b.date.compareTo(a.date));
     final latestRecord = records.isNotEmpty ? records.first : null;
@@ -58,7 +57,8 @@ class _HealthStatusTabState extends State<HealthStatusTab> {
     String notesText = 'Active and eating well. No signs of illness.';
     if (latestRecord != null && latestRecord.notes.trim().isNotEmpty) {
       notesText = latestRecord.notes;
-    } else if (animal.status.toLowerCase() != 'healthy') {
+    } else if ((animal['health_status'] ?? '').toString().toLowerCase() !=
+        'healthy') {
       notesText = 'Monitoring required. Please check recent health records.';
     }
 
@@ -73,12 +73,20 @@ class _HealthStatusTabState extends State<HealthStatusTab> {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: animal.status.toLowerCase().contains('health')
+              color:
+                  (animal['health_status'] ?? '')
+                      .toString()
+                      .toLowerCase()
+                      .contains('health')
                   ? Colors.green[50]
                   : Colors.orange[50],
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
-                color: animal.status.toLowerCase().contains('health')
+                color:
+                    (animal['health_status'] ?? '')
+                        .toString()
+                        .toLowerCase()
+                        .contains('health')
                     ? Colors.green[200]!
                     : Colors.orange[200]!,
               ),
@@ -87,7 +95,11 @@ class _HealthStatusTabState extends State<HealthStatusTab> {
               children: [
                 Icon(
                   Icons.favorite,
-                  color: animal.status.toLowerCase().contains('health')
+                  color:
+                      (animal['health_status'] ?? '')
+                          .toString()
+                          .toLowerCase()
+                          .contains('health')
                       ? Colors.green
                       : Colors.orange,
                   size: 40,
@@ -108,13 +120,17 @@ class _HealthStatusTabState extends State<HealthStatusTab> {
                           vertical: 2,
                         ),
                         decoration: BoxDecoration(
-                          color: animal.status.toLowerCase().contains('health')
+                          color:
+                              (animal['health_status'] ?? '')
+                                  .toString()
+                                  .toLowerCase()
+                                  .contains('health')
                               ? Colors.green
                               : Colors.orange,
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(
-                          animal.status,
+                          (animal['health_status'] ?? 'Healthy').toString(),
                           style: const TextStyle(
                             color: Colors.white,
                             fontSize: 12,
@@ -123,9 +139,12 @@ class _HealthStatusTabState extends State<HealthStatusTab> {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        animal.status.toLowerCase().contains('health')
-                            ? '${animal.name} is in good health. No major issues reported.'
-                            : '${animal.name} requires attention and monitoring.',
+                        (animal['health_status'] ?? '')
+                                .toString()
+                                .toLowerCase()
+                                .contains('health')
+                            ? '${animal['name'] ?? 'Unnamed'} is in good health. No major issues reported.'
+                            : '${animal['name'] ?? 'Unnamed'} requires attention and monitoring.',
                         style: const TextStyle(fontSize: 12),
                       ),
                     ],
@@ -222,7 +241,7 @@ class _HealthStatusTabState extends State<HealthStatusTab> {
                                     context,
                                     MaterialPageRoute(
                                       builder: (_) => AddHealthRecordScreen(
-                                        animalId: animal.id,
+                                        animalId: animal['id'].toString(),
                                         existingRecord: r,
                                       ),
                                     ),

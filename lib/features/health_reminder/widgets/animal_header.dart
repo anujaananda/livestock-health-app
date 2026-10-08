@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../models/models.dart';
-
 class AnimalHeader extends StatelessWidget {
-  final DemoAnimal animal;
+  final Map<String, dynamic> animal;
 
   const AnimalHeader({super.key, required this.animal});
 
@@ -35,7 +33,7 @@ class AnimalHeader extends StatelessWidget {
                   children: [
                     Expanded(
                       child: Text(
-                        animal.name,
+                        (animal['name'] ?? 'Unnamed').toString(),
                         style: const TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
@@ -50,15 +48,23 @@ class AnimalHeader extends StatelessWidget {
                         vertical: 4,
                       ),
                       decoration: BoxDecoration(
-                        color: animal.status.toLowerCase().contains('health')
+                        color:
+                            (animal['health_status'] ?? '')
+                                .toString()
+                                .toLowerCase()
+                                .contains('health')
                             ? Colors.green[100]
                             : Colors.orange[100],
                         borderRadius: BorderRadius.circular(16),
                       ),
                       child: Text(
-                        animal.status,
+                        (animal['health_status'] ?? 'Healthy').toString(),
                         style: TextStyle(
-                          color: animal.status.toLowerCase().contains('health')
+                          color:
+                              (animal['health_status'] ?? '')
+                                  .toString()
+                                  .toLowerCase()
+                                  .contains('health')
                               ? Colors.green[800]
                               : Colors.orange[800],
                           fontSize: 12,
@@ -70,23 +76,23 @@ class AnimalHeader extends StatelessWidget {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'ID: ${animal.id}',
+                  'ID: ${animal['animal_id_tag'] ?? 'No ID'}',
                   style: const TextStyle(color: Colors.grey, fontSize: 12),
                 ),
                 Text(
-                  'Species: ${animal.species}',
+                  'Species: ${animal['species'] ?? 'Unknown'}',
                   style: const TextStyle(color: Colors.grey, fontSize: 12),
                 ),
                 Text(
-                  'Breed: ${animal.breed}',
+                  'Breed: ${animal['breed'] ?? 'Unknown'}',
                   style: const TextStyle(color: Colors.grey, fontSize: 12),
                 ),
                 Text(
-                  'Age: ${animal.age} years',
+                  'Age: ${animal['age'] ?? 'Unknown'} years',
                   style: const TextStyle(color: Colors.grey, fontSize: 12),
                 ),
                 Text(
-                  'Gender: ${animal.gender}',
+                  'Gender: ${animal['gender'] ?? 'Unknown'}',
                   style: const TextStyle(color: Colors.grey, fontSize: 12),
                 ),
               ],

@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import '../vet_booking/find_vet_screen.dart';
 import '../vet_booking/my_appointments_screen.dart';
 import '../vet_booking/farmer_profile_screen.dart';
+import '../farmer/my_animals_screen.dart';
 
 class FarmerHomeScreen extends StatefulWidget {
   final String userName;
@@ -96,7 +97,10 @@ class _FarmerHomeScreenState extends State<FarmerHomeScreen> {
   }
 
   void _openMyAnimals() {
-    _comingSoon('My Animals');
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const MyAnimalsScreen()),
+    );
   }
 
   void _openHealthGuide(int index) {

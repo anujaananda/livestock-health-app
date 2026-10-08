@@ -5,7 +5,7 @@ import '../models/models.dart';
 import '../data/local_data.dart';
 
 class TreatmentHistoryTab extends StatefulWidget {
-  final DemoAnimal animal;
+  final Map<String, dynamic> animal;
 
   const TreatmentHistoryTab({super.key, required this.animal});
 
@@ -70,7 +70,7 @@ class _TreatmentHistoryTabState extends State<TreatmentHistoryTab> {
                     _data.addTreatment(
                       Treatment(
                         id: DateTime.now().millisecondsSinceEpoch.toString(),
-                        animalId: widget.animal.id,
+                        animalId: widget.animal['id'].toString(),
                         date: DateTime.now(),
                         title: titleCtrl.text,
                         description: descCtrl.text,
@@ -141,7 +141,7 @@ class _TreatmentHistoryTabState extends State<TreatmentHistoryTab> {
   @override
   Widget build(BuildContext context) {
     final treatments = _data.treatments
-        .where((t) => t.animalId == widget.animal.id)
+        .where((t) => t.animalId == widget.animal['id'].toString())
         .toList();
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16.0),
