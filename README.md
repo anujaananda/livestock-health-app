@@ -1,22 +1,43 @@
-<<<<<<< HEAD
-# livestock_health_app
+@"
+# 🐄 Livestock Health App
 
-A new Flutter project.
+A comprehensive livestock health tracking and veterinary consultation app built with Flutter + Supabase.
 
-## Getting Started
+## ✨ Features
 
-This project is a starting point for a Flutter application.
+- 🔐 Multi-role authentication (Farmer / Vet)
+- 🐾 Animal management & profiles
+- 📅 Appointment booking system
+- 🚨 Emergency alerts & responses
+- 📋 Health records & medical history
+- 💊 Treatment & vaccination tracking
+- 🏥 Medical records with photos
+- ⭐ Vet reviews & ratings
+- 👤 Profile management
+- 🔔 Real-time notifications
+- 📸 Photo uploads (consultations)
 
-A few resources to get you started if this is your first Flutter project:
+## 🛠 Tech Stack
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
+- **Frontend:** Flutter 3.x
+- **Backend:** Supabase (PostgreSQL + Storage + Realtime)
+- **State Management:** Provider
+- **Auth:** Supabase Auth
+- **Notifications:** flutter_local_notifications
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
-=======
-# livestock-health-app
-Livestock Health Tracking &amp; Vet Consultation App - Flutter
->>>>>>> fc3a4665a6f2f52a95e2eec956791cbf9320c092
+## 🚀 Setup
+
+1. Clone the repo
+2. `flutter pub get`
+3. Add Supabase credentials in `main.dart`
+4. Run Supabase migrations (SQL files)
+5. `flutter run`
+
+## 📱 Screenshots
+
+Coming soon...
+
+## 📄 License
+
+MIT
+"@ | Out-File -Encoding utf8 README.md
