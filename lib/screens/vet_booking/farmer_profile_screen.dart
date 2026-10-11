@@ -1,5 +1,7 @@
+// lib/screens/vet_booking/farmer_profile_screen.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../services/auth_service.dart';
 import '../auth/login_screen.dart';
@@ -16,22 +18,101 @@ class _FarmerProfileScreenState extends State<FarmerProfileScreen> {
   Map<String, dynamic>? _profile;
   bool _isLoading = true;
 
+  // ✅ Real counts
+  int _animalCount = 0;
+  int _appointmentCount = 0;
+  int _healthRecordCount = 0;
+
   static const Color primaryGreen = Color(0xFF20B769);
 
   @override
   void initState() {
     super.initState();
-    _loadProfile();
+    _loadAllData();
   }
 
-  Future<void> _loadProfile() async {
+  // ================= ✅ GET PROFILE IMAGE URL =================
+  String get _profileImageUrl {
+    final url = _profile?['profile_image_url'];
+    if (url != null && url.toString().isNotEmpty) {
+      return url.toString();
+    }
+    return 'https://i.pravatar.cc/150?img=13'; // fallback
+  }
+
+  // ================= LOAD PROFILE + COUNTS =================
+  Future<void> _loadAllData() async {
     final authService = Provider.of<AuthService>(context, listen: false);
+    final userId = authService.currentUser!.id;
+
     final profile = await authService.getUserProfile();
+    final counts = await _loadCounts(userId);
+
+    if (!mounted) return;
 
     setState(() {
       _profile = profile;
+      _animalCount = counts['animals'] ?? 0;
+      _appointmentCount = counts['appointments'] ?? 0;
+      _healthRecordCount = counts['health_records'] ?? 0;
       _isLoading = false;
     });
+  }
+
+  // ================= LOAD COUNTS FROM SUPABASE =================
+  Future<Map<String, int>> _loadCounts(String userId) async {
+    final supabase = Supabase.instance.client;
+
+    int animals = 0;
+    int appointments = 0;
+    int healthRecords = 0;
+
+    try {
+      final animalsData = await supabase
+          .from('animals')
+          .select('id')
+          .eq('owner_id', userId);
+      animals = (animalsData as List).length;
+      print('🐾 Animals count: $animals');
+    } catch (e) {
+      print('❌ Animals count error: $e');
+    }
+
+    try {
+      final appointmentsData = await supabase
+          .from('appointments')
+          .select('id')
+          .eq('farmer_id', userId);
+
+      final consultationsData = await supabase
+          .from('consultations')
+          .select('id')
+          .eq('farmer_id', userId);
+
+      appointments =
+          (appointmentsData as List).length +
+          (consultationsData as List).length;
+      print('📅 Appointments count: $appointments');
+    } catch (e) {
+      print('❌ Appointments count error: $e');
+    }
+
+    try {
+      final healthData = await supabase
+          .from('health_records')
+          .select('id')
+          .eq('owner_id', userId);
+      healthRecords = (healthData as List).length;
+      print('📋 Health Records count: $healthRecords');
+    } catch (e) {
+      print('❌ Health Records count error: $e');
+    }
+
+    return {
+      'animals': animals,
+      'appointments': appointments,
+      'health_records': healthRecords,
+    };
   }
 
   @override
@@ -40,8 +121,6 @@ class _FarmerProfileScreenState extends State<FarmerProfileScreen> {
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8FCF9),
-
-      // ================= APP BAR =================
       appBar: AppBar(
         backgroundColor: primaryGreen,
         elevation: 0,
@@ -69,232 +148,283 @@ class _FarmerProfileScreenState extends State<FarmerProfileScreen> {
               );
 
               if (result == true) {
-                _loadProfile(); // Reload profile after edit
+                _loadAllData();
               }
             },
           ),
         ],
       ),
-
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
-          : SingleChildScrollView(
-              child: Column(
-                children: [
-                  // ================= COVER IMAGE + PROFILE =================
-                  Stack(
-                    clipBehavior: Clip.none,
-                    alignment: Alignment.center,
-                    children: [
-                      // Cover Image
-                      Container(
-                        height: 150,
-                        width: double.infinity,
-                        decoration: const BoxDecoration(
-                          image: DecorationImage(
-                            image: NetworkImage(
-                              'https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=800',
-                            ),
-                            fit: BoxFit.cover,
-                          ),
-                        ),
-                      ),
-
-                      // Profile Image
-                      Positioned(
-                        bottom: -50,
-                        child: CircleAvatar(
-                          radius: 50,
-                          backgroundColor: Colors.white,
-                          child: CircleAvatar(
-                            radius: 46,
-                            backgroundColor: const Color(0xFFE5F7EA),
-                            backgroundImage: const NetworkImage(
-                              'https://i.pravatar.cc/150?img=13',
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 60),
-
-                  // ================= NAME + TYPE + LOCATION =================
-                  Text(
-                    _profile?['full_name'] ?? 'Unknown User',
-                    style: const TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF1E3027),
-                    ),
-                  ),
-
-                  const SizedBox(height: 4),
-
-                  Text(
-                    _profile?['user_type'] ?? 'Farmer',
-                    style: const TextStyle(
-                      fontSize: 14,
-                      color: Color(0xFF697A71),
-                    ),
-                  ),
-
-                  const SizedBox(height: 6),
-
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(
-                        Icons.location_on_outlined,
-                        size: 16,
-                        color: Color(0xFF697A71),
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        _profile?['location'] ?? 'Sri Lanka',
-                        style: const TextStyle(
-                          fontSize: 13,
-                          color: Color(0xFF697A71),
-                        ),
-                      ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 20),
-
-                  // ================= STATS ROW =================
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(14),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.05),
-                            blurRadius: 8,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
-                      ),
-                      child: Row(
-                        children: [
-                          _buildStatItem('12', 'Animals'),
-                          _buildDivider(),
-                          _buildStatItem('5', 'Appointments'),
-                          _buildDivider(),
-                          _buildStatItem('8', 'Health Records'),
-                        ],
-                      ),
-                    ),
-                  ),
-
-                  const SizedBox(height: 24),
-
-                  // ================= PERSONAL INFORMATION =================
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+          : RefreshIndicator(
+              onRefresh: _loadAllData,
+              color: primaryGreen,
+              child: SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                child: Column(
+                  children: [
+                    // ================= COVER + PROFILE =================
+                    Stack(
+                      clipBehavior: Clip.none,
+                      alignment: Alignment.center,
                       children: [
-                        const Text(
-                          'Personal Information',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xFF1E3027),
+                        Container(
+                          height: 150,
+                          width: double.infinity,
+                          decoration: const BoxDecoration(
+                            image: DecorationImage(
+                              image: NetworkImage(
+                                'https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=800',
+                              ),
+                              fit: BoxFit.cover,
+                            ),
                           ),
                         ),
-                        const SizedBox(height: 12),
 
-                        // Full Name
-                        _buildInfoCard(
-                          icon: Icons.person_outline,
-                          label: 'Full Name',
-                          value: _profile?['full_name'] ?? 'N/A',
-                        ),
-
-                        // Phone
-                        _buildInfoCard(
-                          icon: Icons.phone_outlined,
-                          label: 'Phone',
-                          value: _profile?['phone'] ?? 'N/A',
-                        ),
-
-                        // Email
-                        _buildInfoCard(
-                          icon: Icons.email_outlined,
-                          label: 'Email',
-                          value: _profile?['email'] ?? 'N/A',
-                        ),
-
-                        // Address
-                        _buildInfoCard(
-                          icon: Icons.location_on_outlined,
-                          label: 'Address',
-                          value: _profile?['location'] ?? 'Sri Lanka',
+                        // ✅ Profile Photo — DYNAMIC from DB
+                        Positioned(
+                          bottom: -50,
+                          child: Container(
+                            padding: const EdgeInsets.all(3),
+                            decoration: const BoxDecoration(
+                              color: Colors.white,
+                              shape: BoxShape.circle,
+                            ),
+                            child: Container(
+                              width: 96,
+                              height: 96,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: const Color(0xFFE5F7EA),
+                                border: Border.all(
+                                  color: const Color(0xFFE5F7EA),
+                                  width: 2,
+                                ),
+                              ),
+                              child: ClipOval(
+                                child: Image.network(
+                                  _profileImageUrl,
+                                  fit: BoxFit.cover,
+                                  width: 96,
+                                  height: 96,
+                                  loadingBuilder:
+                                      (context, child, loadingProgress) {
+                                        if (loadingProgress == null)
+                                          return child;
+                                        return const Center(
+                                          child: SizedBox(
+                                            width: 24,
+                                            height: 24,
+                                            child: CircularProgressIndicator(
+                                              color: primaryGreen,
+                                              strokeWidth: 2,
+                                            ),
+                                          ),
+                                        );
+                                      },
+                                  errorBuilder: (_, __, ___) => const Icon(
+                                    Icons.person,
+                                    color: primaryGreen,
+                                    size: 44,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
                         ),
                       ],
                     ),
-                  ),
 
-                  const SizedBox(height: 24),
+                    const SizedBox(height: 60),
 
-                  // ================= LOGOUT BUTTON =================
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    child: SizedBox(
-                      width: double.infinity,
-                      height: 50,
-                      child: ElevatedButton(
-                        onPressed: () async {
-                          await authService.signOut();
-                          if (context.mounted) {
-                            Navigator.pushReplacement(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => const LoginScreen(),
-                              ),
-                            );
-                          }
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.red,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+                    // ================= NAME =================
+                    Text(
+                      _profile?['full_name'] ?? 'Unknown User',
+                      style: const TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF1E3027),
+                      ),
+                    ),
+
+                    const SizedBox(height: 4),
+
+                    Text(
+                      _profile?['user_type'] ?? 'Farmer',
+                      style: const TextStyle(
+                        fontSize: 14,
+                        color: Color(0xFF697A71),
+                      ),
+                    ),
+
+                    const SizedBox(height: 6),
+
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(
+                          Icons.location_on_outlined,
+                          size: 16,
+                          color: Color(0xFF697A71),
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          _profile?['location'] ?? 'Sri Lanka',
+                          style: const TextStyle(
+                            fontSize: 13,
+                            color: Color(0xFF697A71),
                           ),
                         ),
-                        child: const Text(
-                          'Logout',
-                          style: TextStyle(fontSize: 16, color: Colors.white),
+                      ],
+                    ),
+
+                    const SizedBox(height: 20),
+
+                    // ================= REAL STATS =================
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(14),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.05),
+                              blurRadius: 8,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: Row(
+                          children: [
+                            _buildStatItem(
+                              '$_animalCount',
+                              'Animals',
+                              Icons.pets,
+                            ),
+                            _buildDivider(),
+                            _buildStatItem(
+                              '$_appointmentCount',
+                              'Appointments',
+                              Icons.calendar_month,
+                            ),
+                            _buildDivider(),
+                            _buildStatItem(
+                              '$_healthRecordCount',
+                              'Health Records',
+                              Icons.medical_information,
+                            ),
+                          ],
                         ),
                       ),
                     ),
-                  ),
 
-                  const SizedBox(height: 30),
-                ],
+                    const SizedBox(height: 24),
+
+                    // ================= PERSONAL INFO =================
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Personal Information',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF1E3027),
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+
+                          _buildInfoCard(
+                            icon: Icons.person_outline,
+                            label: 'Full Name',
+                            value: _profile?['full_name'] ?? 'N/A',
+                          ),
+                          _buildInfoCard(
+                            icon: Icons.phone_outlined,
+                            label: 'Phone',
+                            value: _profile?['phone'] ?? 'N/A',
+                          ),
+                          _buildInfoCard(
+                            icon: Icons.email_outlined,
+                            label: 'Email',
+                            value: _profile?['email'] ?? 'N/A',
+                          ),
+                          _buildInfoCard(
+                            icon: Icons.location_on_outlined,
+                            label: 'Address',
+                            value: _profile?['location'] ?? 'Sri Lanka',
+                          ),
+                          _buildInfoCard(
+                            icon: Icons.agriculture_outlined,
+                            label: 'Farm Name',
+                            value: _profile?['farm_name'] ?? 'Not set',
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(height: 24),
+
+                    // ================= LOGOUT =================
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: SizedBox(
+                        width: double.infinity,
+                        height: 50,
+                        child: ElevatedButton(
+                          onPressed: () async {
+                            await authService.signOut();
+                            if (context.mounted) {
+                              Navigator.pushReplacement(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => const LoginScreen(),
+                                ),
+                              );
+                            }
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.red,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          child: const Text(
+                            'Logout',
+                            style: TextStyle(fontSize: 16, color: Colors.white),
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 30),
+                  ],
+                ),
               ),
             ),
     );
   }
 
   // ================= STAT ITEM =================
-  Widget _buildStatItem(String value, String label) {
+  Widget _buildStatItem(String value, String label, IconData icon) {
     return Expanded(
       child: Column(
         children: [
+          Icon(icon, size: 20, color: primaryGreen),
+          const SizedBox(height: 6),
           Text(
             value,
             style: const TextStyle(
-              fontSize: 18,
+              fontSize: 20,
               fontWeight: FontWeight.bold,
               color: Color(0xFF1E3027),
             ),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 2),
           Text(
             label,
             textAlign: TextAlign.center,
@@ -311,7 +441,7 @@ class _FarmerProfileScreenState extends State<FarmerProfileScreen> {
 
   // ================= DIVIDER =================
   Widget _buildDivider() {
-    return Container(width: 1, height: 30, color: const Color(0xFFE5E7EB));
+    return Container(width: 1, height: 40, color: const Color(0xFFE5E7EB));
   }
 
   // ================= INFO CARD =================

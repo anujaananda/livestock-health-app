@@ -66,5 +66,9 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<key>NSPhotoLibraryUsageDescription</key>
+<string>We need access to photos to attach them to your consultation request</string>
+<key>NSCameraUsageDescription</key>
+<string>We need camera access to take photos of your animal</string>
 </dict>
 </plist>

@@ -25,6 +25,9 @@ dependencies:
   # Image Picker
   image_picker: ^1.0.4
 
+  # URL Launcher (for emergency calls)
+  url_launcher: ^6.3.3
+
   # Icons
   cupertino_icons: ^1.0.8
 
@@ -36,3 +39,7 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+
+  # ✅ Assets section add කරන්න
+  assets:
+    - assets/images/

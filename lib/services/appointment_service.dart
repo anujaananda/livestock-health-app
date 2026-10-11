@@ -1,3 +1,4 @@
+// lib/services/appointment_service.dart
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
 
@@ -6,7 +7,7 @@ import '../models/appointment_model.dart';
 class AppointmentService {
   final SupabaseClient _supabase = Supabase.instance.client;
 
-  // ================= CREATE =================
+  // ================= CREATE APPOINTMENT =================
   Future<bool> createAppointment({
     required String farmerId,
     required String vetId,
@@ -14,7 +15,7 @@ class AppointmentService {
     required DateTime date,
     required String time,
     required String notes,
-    String type = 'online', // 'online' හෝ 'onsite'
+    String type = 'online',
   }) async {
     try {
       await _supabase.from('appointments').insert({
@@ -35,25 +36,141 @@ class AppointmentService {
     }
   }
 
-  // ================= READ (Farmer) =================
+  // ================= ✅ READ (Farmer Appointments with vet details) =================
   Future<List<AppointmentModel>> getFarmerAppointments(String farmerId) async {
     try {
+      print('🔍 Loading appointments for farmer: $farmerId');
+
       final data = await _supabase
           .from('appointments')
           .select()
           .eq('farmer_id', farmerId)
           .order('date', ascending: false);
 
-      return (data as List)
+      final appointments = (data as List)
           .map((item) => AppointmentModel.fromMap(item))
           .toList();
+
+      print('📊 Found ${appointments.length} appointments');
+
+      final List<AppointmentModel> result = [];
+
+      for (final appt in appointments) {
+        if (appt.vetId.isNotEmpty) {
+          try {
+            final vetData = await _supabase
+                .from('vet_profiles')
+                .select('full_name, specialization, profile_image_url')
+                .eq('user_id', appt.vetId)
+                .maybeSingle();
+
+            if (vetData != null) {
+              print('👨‍⚕️ Vet found: ${vetData['full_name']}');
+              result.add(
+                appt.copyWith(
+                  vetName: vetData['full_name'],
+                  vetImageUrl: vetData['profile_image_url'],
+                  vetSpecialization: vetData['specialization'],
+                ),
+              );
+              continue;
+            }
+
+            final profileData = await _supabase
+                .from('profiles')
+                .select('full_name, specialization, profile_image_url')
+                .eq('id', appt.vetId)
+                .maybeSingle();
+
+            if (profileData != null) {
+              print('👨‍⚕️ Vet (from profiles): ${profileData['full_name']}');
+              result.add(
+                appt.copyWith(
+                  vetName: profileData['full_name'],
+                  vetImageUrl: profileData['profile_image_url'],
+                  vetSpecialization: profileData['specialization'],
+                ),
+              );
+            } else {
+              print('⚠️ No vet profile for vet_id: ${appt.vetId}');
+              result.add(appt);
+            }
+          } catch (e) {
+            print('❌ Error loading vet: $e');
+            result.add(appt);
+          }
+        } else {
+          result.add(appt);
+        }
+      }
+
+      print('✅ Loaded ${result.length} appointments with vet details');
+      return result;
     } catch (e) {
       print('❌ Get farmer appointments error: $e');
       return [];
     }
   }
 
-  // ================= READ (Vet) =================
+  // ================= ✅ READ (Farmer Consultations with Vet Details) =================
+  Future<List<AppointmentModel>> getFarmerConsultations(String farmerId) async {
+    try {
+      print('🔍 Loading consultations for farmer: $farmerId');
+
+      final data = await _supabase
+          .from('consultations')
+          .select()
+          .eq('farmer_id', farmerId)
+          .order('created_at', ascending: false);
+
+      final consultations = (data as List)
+          .map((item) => AppointmentModel.fromMap(item))
+          .toList();
+
+      print('📊 Found ${consultations.length} consultations');
+
+      final List<AppointmentModel> result = [];
+
+      for (final consult in consultations) {
+        if (consult.vetId.isNotEmpty) {
+          try {
+            final vetData = await _supabase
+                .from('vet_profiles')
+                .select('full_name, specialization, profile_image_url')
+                .eq('user_id', consult.vetId)
+                .maybeSingle();
+
+            if (vetData != null) {
+              print('👨‍⚕️ Vet found: ${vetData['full_name']}');
+              result.add(
+                consult.copyWith(
+                  vetName: vetData['full_name'],
+                  vetImageUrl: vetData['profile_image_url'],
+                  vetSpecialization: vetData['specialization'],
+                ),
+              );
+            } else {
+              print('⚠️ No vet profile for vet_id: ${consult.vetId}');
+              result.add(consult);
+            }
+          } catch (e) {
+            print('❌ Error loading vet: $e');
+            result.add(consult);
+          }
+        } else {
+          result.add(consult);
+        }
+      }
+
+      print('✅ Loaded ${result.length} consultations with vet details');
+      return result;
+    } catch (e) {
+      print('❌ Get farmer consultations error: $e');
+      return [];
+    }
+  }
+
+  // ================= READ (Vet Appointments) =================
   Future<List<AppointmentModel>> getVetAppointments(String vetId) async {
     try {
       final data = await _supabase
@@ -71,7 +188,25 @@ class AppointmentService {
     }
   }
 
-  // ================= READ (All - Vet Dashboard) =================
+  // ================= READ (Vet Consultations) =================
+  Future<List<AppointmentModel>> getVetConsultations(String vetId) async {
+    try {
+      final data = await _supabase
+          .from('consultations')
+          .select()
+          .eq('vet_id', vetId)
+          .order('created_at', ascending: false);
+
+      return (data as List)
+          .map((item) => AppointmentModel.fromMap(item))
+          .toList();
+    } catch (e) {
+      print('❌ Get vet consultations error: $e');
+      return [];
+    }
+  }
+
+  // ================= READ (All) =================
   Future<List<AppointmentModel>> getAllAppointments() async {
     try {
       final data = await _supabase
@@ -94,13 +229,61 @@ class AppointmentService {
     required String status,
   }) async {
     try {
-      await _supabase
+      final result = await _supabase
           .from('appointments')
           .update({'status': status})
-          .eq('id', appointmentId);
+          .eq('id', appointmentId)
+          .select();
+
+      if ((result as List).isEmpty) {
+        await _supabase
+            .from('consultations')
+            .update({'status': status})
+            .eq('id', appointmentId);
+      }
+
       return true;
     } catch (e) {
       print('❌ Update appointment status error: $e');
+      return false;
+    }
+  }
+
+  // ================= ✅ UPDATE DATE + TIME =================
+  Future<bool> updateAppointmentDateTime({
+    required String appointmentId,
+    required DateTime date,
+    required String time,
+  }) async {
+    try {
+      print('📝 Updating appointment date/time:');
+      print('   id: $appointmentId');
+      print('   date: ${date.toIso8601String().split('T')[0]}');
+      print('   time: $time');
+
+      // ✅ Try appointments table first
+      final result = await _supabase
+          .from('appointments')
+          .update({'date': date.toIso8601String().split('T')[0], 'time': time})
+          .eq('id', appointmentId)
+          .select();
+
+      // ✅ If no record, try consultations table
+      if ((result as List).isEmpty) {
+        print('⚠️ Not in appointments table, trying consultations...');
+        await _supabase
+            .from('consultations')
+            .update({
+              'date': date.toIso8601String().split('T')[0],
+              'time': time,
+            })
+            .eq('id', appointmentId);
+      }
+
+      print('✅ Date/time updated successfully');
+      return true;
+    } catch (e) {
+      print('❌ Update date/time error: $e');
       return false;
     }
   }
@@ -111,10 +294,19 @@ class AppointmentService {
     required String type,
   }) async {
     try {
-      await _supabase
+      final result = await _supabase
           .from('appointments')
           .update({'type': type})
-          .eq('id', appointmentId);
+          .eq('id', appointmentId)
+          .select();
+
+      if ((result as List).isEmpty) {
+        await _supabase
+            .from('consultations')
+            .update({'consultation_type': type})
+            .eq('id', appointmentId);
+      }
+
       return true;
     } catch (e) {
       print('❌ Update appointment type error: $e');
@@ -125,7 +317,16 @@ class AppointmentService {
   // ================= DELETE =================
   Future<bool> deleteAppointment(String appointmentId) async {
     try {
-      await _supabase.from('appointments').delete().eq('id', appointmentId);
+      final result = await _supabase
+          .from('appointments')
+          .delete()
+          .eq('id', appointmentId)
+          .select();
+
+      if ((result as List).isEmpty) {
+        await _supabase.from('consultations').delete().eq('id', appointmentId);
+      }
+
       return true;
     } catch (e) {
       print('❌ Delete appointment error: $e');
@@ -140,9 +341,23 @@ class AppointmentService {
           .from('appointments')
           .select()
           .eq('id', appointmentId)
-          .single();
+          .maybeSingle();
 
-      return AppointmentModel.fromMap(data);
+      if (data != null) {
+        return AppointmentModel.fromMap(data);
+      }
+
+      final consultData = await _supabase
+          .from('consultations')
+          .select()
+          .eq('id', appointmentId)
+          .maybeSingle();
+
+      if (consultData != null) {
+        return AppointmentModel.fromMap(consultData);
+      }
+
+      return null;
     } catch (e) {
       print('❌ Get appointment error: $e');
       return null;

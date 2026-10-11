@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../vet_booking/vet_appointments_screen.dart';
 import '../vet_booking/vet_dashboard_screen.dart';
+import '../vet_booking/vet_emergency_alerts_screen.dart';
 import '../vet_booking/vet_profile_screen.dart';
 
 class VetHomeScreen extends StatefulWidget {
@@ -15,11 +16,20 @@ class VetHomeScreen extends StatefulWidget {
 
 class _VetHomeScreenState extends State<VetHomeScreen> {
   static const Color primaryGreen = Color(0xFF20B769);
-  int _selectedIndex = 0;
 
-  // ================= TAB SWITCH METHOD =================
+  int _selectedIndex = 0;
+  int _activeAlertsCount = 0;
+
+  // ================= TAB SWITCH =================
   void _switchTab(int index) {
     setState(() => _selectedIndex = index);
+  }
+
+  // ================= ALERTS COUNT UPDATE =================
+  void _updateAlertsCount(int count) {
+    if (_activeAlertsCount != count && mounted) {
+      setState(() => _activeAlertsCount = count);
+    }
   }
 
   @override
@@ -31,15 +41,22 @@ class _VetHomeScreenState extends State<VetHomeScreen> {
       body: IndexedStack(
         index: _selectedIndex,
         children: [
-          // Dashboard with callback
+          // 0 - Dashboard
           VetDashboardScreen(
             userName: widget.userName,
             onAppointmentsTap: () => _switchTab(1),
+            onAlertsTap: () => _switchTab(2),
+            onAlertsCountChanged: _updateAlertsCount,
           ),
-          // Appointments
+
+          // 1 - Appointments
           const VetAppointmentsScreen(showBackButton: false),
-          // Profile
-          const VetProfileScreen(),
+
+          // 2 - Emergency Alerts
+          const VetEmergencyAlertsScreen(showBackButton: false),
+
+          // 3 - Profile ✅ const අයින් කරා
+          VetProfileScreen(),
         ],
       ),
 
@@ -55,18 +72,92 @@ class _VetHomeScreenState extends State<VetHomeScreen> {
         onTap: (index) {
           setState(() => _selectedIndex = index);
         },
-        items: const [
-          BottomNavigationBarItem(
+        items: [
+          const BottomNavigationBarItem(
             icon: Icon(Icons.dashboard_outlined),
             activeIcon: Icon(Icons.dashboard),
             label: 'Dashboard',
           ),
-          BottomNavigationBarItem(
+          const BottomNavigationBarItem(
             icon: Icon(Icons.calendar_month_outlined),
             activeIcon: Icon(Icons.calendar_month),
             label: 'Appointments',
           ),
+
+          // ✅ Alerts tab with red badge
           BottomNavigationBarItem(
+            icon: Stack(
+              clipBehavior: Clip.none,
+              children: [
+                const Icon(Icons.warning_amber_outlined),
+                if (_activeAlertsCount > 0)
+                  Positioned(
+                    top: -4,
+                    right: -6,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 5,
+                        vertical: 1,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.red,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      constraints: const BoxConstraints(
+                        minWidth: 16,
+                        minHeight: 16,
+                      ),
+                      child: Text(
+                        '$_activeAlertsCount',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 9,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+            activeIcon: Stack(
+              clipBehavior: Clip.none,
+              children: [
+                const Icon(Icons.warning_amber_rounded),
+                if (_activeAlertsCount > 0)
+                  Positioned(
+                    top: -4,
+                    right: -6,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 5,
+                        vertical: 1,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.red,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      constraints: const BoxConstraints(
+                        minWidth: 16,
+                        minHeight: 16,
+                      ),
+                      child: Text(
+                        '$_activeAlertsCount',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 9,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+            label: 'Alerts',
+          ),
+
+          const BottomNavigationBarItem(
             icon: Icon(Icons.person_outline_rounded),
             activeIcon: Icon(Icons.person),
             label: 'Profile',

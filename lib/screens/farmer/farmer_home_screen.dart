@@ -1,5 +1,5 @@
-
 import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import 'health_guide_screen.dart';
@@ -8,31 +8,23 @@ import 'my_animals_screen.dart';
 class FarmerHomeScreen extends StatefulWidget {
   final String userName;
 
-  const FarmerHomeScreen({
-    super.key,
-    this.userName = 'Farmer',
-  });
+  const FarmerHomeScreen({super.key, this.userName = 'Farmer'});
 
   @override
-  State<FarmerHomeScreen> createState() =>
-      _FarmerHomeScreenState();
+  State<FarmerHomeScreen> createState() => _FarmerHomeScreenState();
 }
 
 class _FarmerHomeScreenState extends State<FarmerHomeScreen> {
   // ================= VARIABLES =================
-
   final PageController _bannerController = PageController();
-
   Timer? _bannerTimer;
-
   int _currentBanner = 0;
   int _selectedIndex = 0;
 
   static const Color primaryGreen = Color(0xFF20B769);
   static const Color darkGreen = Color(0xFF176B43);
 
-  // ================= BANNER DATA =================
-
+  // ================= BANNER DATA (3 only) =================
   final List<Map<String, String>> _banners = [
     {
       'image': 'assets/images/farmer_home_banner.png',
@@ -40,53 +32,42 @@ class _FarmerHomeScreenState extends State<FarmerHomeScreen> {
       'subtitle': '',
     },
     {
-      'image': 'assets/images/shelter_banner.png',
-      'title': 'Safe Shelter & Hygiene',
-      'subtitle': 'A clean environment keeps animals healthy',
-    },
-    {
       'image': 'assets/images/vaccination_banner.png',
       'title': 'Vaccination & Prevention',
       'subtitle': 'Prevent diseases, ensure productivity',
     },
+    {
+      // ✅ FIX: consultation_banner → shelter_banner
+      'image': 'assets/images/shelter_banner.png',
+      'title': 'Safe Shelter & Hygiene',
+      'subtitle': 'A clean environment keeps animals healthy',
+    },
   ];
 
   // ================= INITIAL STATE =================
-
   @override
   void initState() {
     super.initState();
-
-    // Change banner automatically every 5 seconds.
     _startBannerTimer();
   }
 
   // ================= AUTOMATIC BANNER =================
-
   void _startBannerTimer() {
     _bannerTimer?.cancel();
+    _bannerTimer = Timer.periodic(const Duration(seconds: 5), (timer) {
+      if (!mounted || !_bannerController.hasClients) return;
 
-    _bannerTimer = Timer.periodic(
-      const Duration(seconds: 5),
-      (timer) {
-        if (!mounted || !_bannerController.hasClients) {
-          return;
-        }
+      final nextPage = (_currentBanner + 1) % _banners.length;
 
-        final nextPage =
-            (_currentBanner + 1) % _banners.length;
-
-        _bannerController.animateToPage(
-          nextPage,
-          duration: const Duration(milliseconds: 650),
-          curve: Curves.easeInOut,
-        );
-      },
-    );
+      _bannerController.animateToPage(
+        nextPage,
+        duration: const Duration(milliseconds: 650),
+        curve: Curves.easeInOut,
+      );
+    });
   }
 
   // ================= DISPOSE =================
-
   @override
   void dispose() {
     _bannerTimer?.cancel();
@@ -95,17 +76,15 @@ class _FarmerHomeScreenState extends State<FarmerHomeScreen> {
   }
 
   // ================= HEALTH GUIDE NAVIGATION =================
-
   void _openHealthGuide(int index) {
-    // The original banner opens the nutrition guide.
     if (index == 0) {
+      // ✅ Healthy Livestock → Nutrition
       Navigator.push(
         context,
         MaterialPageRoute(
           builder: (context) => const HealthGuideScreen(
             headerTitle: 'Nutrition for Healthy Animals',
-            imagePath:
-                'assets/images/farmer_home_banner.png',
+            imagePath: 'assets/images/farmer_home_banner.png',
             title: 'Healthy Livestock',
             subtitle: 'Stronger Tomorrow',
             description:
@@ -122,39 +101,15 @@ class _FarmerHomeScreenState extends State<FarmerHomeScreen> {
         ),
       );
     } else if (index == 1) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => const HealthGuideScreen(
-            headerTitle: 'Shelter & Hygiene',
-            imagePath: 'assets/images/shelter_banner.png',
-            title: 'Safe Shelter & Hygiene',
-            subtitle:
-                'A clean environment keeps animals healthy',
-            description:
-                'Proper shelter protects your animals from '
-                'extreme weather, reduces stress and helps '
-                'prevent the spread of diseases. Keep animal '
-                'housing clean, dry and well-ventilated.',
-            tips: [
-              'Keep animal housing clean and dry.',
-              'Ensure proper ventilation.',
-              'Remove animal waste regularly.',
-            ],
-          ),
-        ),
-      );
-    } else if (index == 2) {
+      // ✅ Vaccination
       Navigator.push(
         context,
         MaterialPageRoute(
           builder: (context) => const HealthGuideScreen(
             headerTitle: 'Vaccination & Prevention',
-            imagePath:
-                'assets/images/vaccination_banner.png',
+            imagePath: 'assets/images/vaccination_banner.png',
             title: 'Vaccination & Prevention',
-            subtitle:
-                'Prevent diseases, ensure productivity',
+            subtitle: 'Prevent diseases, ensure productivity',
             description:
                 'Vaccination helps protect livestock from '
                 'preventable diseases. Consult a veterinarian '
@@ -168,22 +123,41 @@ class _FarmerHomeScreenState extends State<FarmerHomeScreen> {
           ),
         ),
       );
+    } else if (index == 2) {
+      // ✅ FIX: Shelter & Hygiene (consultation_banner → shelter_banner)
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => const HealthGuideScreen(
+            headerTitle: 'Shelter & Hygiene',
+            imagePath: 'assets/images/shelter_banner.png',
+            title: 'Safe Shelter & Hygiene',
+            subtitle: 'A clean environment keeps animals healthy',
+            description:
+                'Proper shelter protects your animals from '
+                'extreme weather, reduces stress and helps '
+                'prevent the spread of diseases. Keep animal '
+                'housing clean, dry and well-ventilated.',
+            tips: [
+              'Keep animal housing clean and dry.',
+              'Ensure proper ventilation.',
+              'Remove animal waste regularly.',
+            ],
+          ),
+        ),
+      );
     }
   }
 
   // ================= MY ANIMALS NAVIGATION =================
-
   void _openMyAnimals() {
     Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (context) => const MyAnimalsScreen(),
-      ),
+      MaterialPageRoute(builder: (context) => const MyAnimalsScreen()),
     );
   }
 
   // ================= TEMPORARY MESSAGE =================
-
   void _comingSoon(String feature) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -195,12 +169,10 @@ class _FarmerHomeScreenState extends State<FarmerHomeScreen> {
   }
 
   // ================= BUILD =================
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF8FCF9),
-
       body: SafeArea(
         child: Column(
           children: [
@@ -209,18 +181,12 @@ class _FarmerHomeScreenState extends State<FarmerHomeScreen> {
                 child: Column(
                   children: [
                     // ================= HEADER =================
-
                     ClipPath(
                       clipper: HomeHeaderClipper(),
                       child: Container(
                         width: double.infinity,
                         height: 165,
-                        padding: const EdgeInsets.fromLTRB(
-                          20,
-                          18,
-                          20,
-                          35,
-                        ),
+                        padding: const EdgeInsets.fromLTRB(20, 18, 20, 35),
                         decoration: const BoxDecoration(
                           gradient: LinearGradient(
                             begin: Alignment.topLeft,
@@ -233,8 +199,7 @@ class _FarmerHomeScreenState extends State<FarmerHomeScreen> {
                           ),
                         ),
                         child: Column(
-                          crossAxisAlignment:
-                              CrossAxisAlignment.start,
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Row(
                               children: [
@@ -243,17 +208,14 @@ class _FarmerHomeScreenState extends State<FarmerHomeScreen> {
                                     _comingSoon('Menu');
                                   },
                                   padding: EdgeInsets.zero,
-                                  constraints:
-                                      const BoxConstraints(),
+                                  constraints: const BoxConstraints(),
                                   icon: const Icon(
                                     Icons.menu_rounded,
                                     color: Colors.white,
                                     size: 25,
                                   ),
                                 ),
-
                                 const SizedBox(width: 14),
-
                                 const Expanded(
                                   child: Text(
                                     'Livestock Health',
@@ -264,34 +226,28 @@ class _FarmerHomeScreenState extends State<FarmerHomeScreen> {
                                     ),
                                   ),
                                 ),
-
                                 Stack(
                                   clipBehavior: Clip.none,
                                   children: [
                                     IconButton(
                                       onPressed: () {
-                                        _comingSoon(
-                                          'Notifications',
-                                        );
+                                        _comingSoon('Notifications');
                                       },
                                       padding: EdgeInsets.zero,
-                                      constraints:
-                                          const BoxConstraints(),
+                                      constraints: const BoxConstraints(),
                                       icon: const Icon(
                                         Icons.notifications_none_rounded,
                                         color: Colors.white,
                                         size: 27,
                                       ),
                                     ),
-
                                     Positioned(
                                       right: 1,
                                       top: 0,
                                       child: Container(
                                         width: 7,
                                         height: 7,
-                                        decoration:
-                                            const BoxDecoration(
+                                        decoration: const BoxDecoration(
                                           color: Color(0xFFE85D68),
                                           shape: BoxShape.circle,
                                         ),
@@ -301,9 +257,7 @@ class _FarmerHomeScreenState extends State<FarmerHomeScreen> {
                                 ),
                               ],
                             ),
-
                             const SizedBox(height: 17),
-
                             Text(
                               'Hello, ${widget.userName}!',
                               style: const TextStyle(
@@ -312,9 +266,7 @@ class _FarmerHomeScreenState extends State<FarmerHomeScreen> {
                                 fontWeight: FontWeight.w500,
                               ),
                             ),
-
                             const SizedBox(height: 5),
-
                             const Text(
                               'Keep your animals healthy and productive',
                               style: TextStyle(
@@ -330,7 +282,6 @@ class _FarmerHomeScreenState extends State<FarmerHomeScreen> {
                     const SizedBox(height: 15),
 
                     // ================= AUTOMATIC BANNER =================
-
                     SizedBox(
                       height: 200,
                       child: PageView.builder(
@@ -340,13 +291,10 @@ class _FarmerHomeScreenState extends State<FarmerHomeScreen> {
                           setState(() {
                             _currentBanner = index;
                           });
-
-                          // Restart the timer after manual swiping.
                           _startBannerTimer();
                         },
                         itemBuilder: (context, index) {
                           final banner = _banners[index];
-
                           return _buildBanner(
                             image: banner['image']!,
                             title: banner['title']!,
@@ -363,76 +311,52 @@ class _FarmerHomeScreenState extends State<FarmerHomeScreen> {
                     const SizedBox(height: 12),
 
                     // ================= BANNER DOTS =================
-
                     Row(
-                      mainAxisAlignment:
-                          MainAxisAlignment.center,
-                      children: List.generate(
-                        _banners.length,
-                        (index) {
-                          final selected =
-                              _currentBanner == index;
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: List.generate(_banners.length, (index) {
+                        final selected = _currentBanner == index;
 
-                          return AnimatedContainer(
-                            duration: const Duration(
-                              milliseconds: 250,
-                            ),
-                            margin:
-                                const EdgeInsets.symmetric(
-                              horizontal: 4,
-                            ),
-                            width: selected ? 18 : 5,
-                            height: 5,
-                            decoration: BoxDecoration(
-                              color: selected
-                                  ? primaryGreen
-                                  : const Color(0xFFCDE7D7),
-                              borderRadius:
-                                  BorderRadius.circular(10),
-                            ),
-                          );
-                        },
-                      ),
+                        return AnimatedContainer(
+                          duration: const Duration(milliseconds: 250),
+                          margin: const EdgeInsets.symmetric(horizontal: 4),
+                          width: selected ? 18 : 5,
+                          height: 5,
+                          decoration: BoxDecoration(
+                            color: selected
+                                ? primaryGreen
+                                : const Color(0xFFCDE7D7),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        );
+                      }),
                     ),
 
                     const SizedBox(height: 22),
 
                     // ================= HOME CARDS =================
-
                     Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 20,
-                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
                       child: Column(
                         children: [
                           _buildHomeCard(
                             title: 'My Animals',
-                            subtitle:
-                                'View and manage your animals',
+                            subtitle: 'View and manage your animals',
                             icon: Icons.pets_rounded,
-                            backgroundColor:
-                                const Color(0xFFE5F7EA),
-                            iconBackground:
-                                const Color(0xFFCFF0D9),
-                            iconColor:
-                                const Color(0xFF16894E),
+                            backgroundColor: const Color(0xFFE5F7EA),
+                            iconBackground: const Color(0xFFCFF0D9),
+                            iconColor: const Color(0xFF16894E),
                             onTap: _openMyAnimals,
                           ),
 
                           const SizedBox(height: 14),
 
-                          // EMERGENCY
-
                           _buildHomeCard(
                             title: 'EMERGENCY',
                             subtitle: 'Contact a Vet Now',
                             icon: Icons.emergency_rounded,
-                            backgroundColor:
-                                const Color(0xFFFFE8E8),
-                            iconBackground:
-                                const Color(0xFFFFD7D7),
-                            iconColor:
-                                const Color(0xFFD95360),
+                            backgroundColor: const Color(0xFFFFE8E8),
+                            iconBackground: const Color(0xFFFFD7D7),
+                            iconColor: const Color(0xFFD95360),
                             onTap: () {
                               _comingSoon('Emergency');
                             },
@@ -442,16 +366,11 @@ class _FarmerHomeScreenState extends State<FarmerHomeScreen> {
 
                           _buildHomeCard(
                             title: 'Consult a Vet',
-                            subtitle:
-                                'Get professional advice',
-                            icon:
-                                Icons.medical_services_outlined,
-                            backgroundColor:
-                                const Color(0xFFF0EBFA),
-                            iconBackground:
-                                const Color(0xFFE4D9F5),
-                            iconColor:
-                                const Color(0xFF7652A8),
+                            subtitle: 'Get professional advice',
+                            icon: Icons.medical_services_outlined,
+                            backgroundColor: const Color(0xFFF0EBFA),
+                            iconBackground: const Color(0xFFE4D9F5),
+                            iconColor: const Color(0xFF7652A8),
                             onTap: () {
                               _comingSoon('Consult a Vet');
                             },
@@ -461,16 +380,11 @@ class _FarmerHomeScreenState extends State<FarmerHomeScreen> {
 
                           _buildHomeCard(
                             title: 'Appointments',
-                            subtitle:
-                                'View and manage appointments',
-                            icon:
-                                Icons.calendar_month_outlined,
-                            backgroundColor:
-                                const Color(0xFFFCEFE5),
-                            iconBackground:
-                                const Color(0xFFF7DFCD),
-                            iconColor:
-                                const Color(0xFFB96832),
+                            subtitle: 'View and manage appointments',
+                            icon: Icons.calendar_month_outlined,
+                            backgroundColor: const Color(0xFFFCEFE5),
+                            iconBackground: const Color(0xFFF7DFCD),
+                            iconColor: const Color(0xFFB96832),
                             onTap: () {
                               _comingSoon('Appointments');
                             },
@@ -483,12 +397,9 @@ class _FarmerHomeScreenState extends State<FarmerHomeScreen> {
                             subtitle:
                                 'Check your latest animal health reminders',
                             icon: Icons.campaign_outlined,
-                            backgroundColor:
-                                const Color(0xFFEAF0F6),
-                            iconBackground:
-                                const Color(0xFFDCE6F0),
-                            iconColor:
-                                const Color(0xFF466A89),
+                            backgroundColor: const Color(0xFFEAF0F6),
+                            iconBackground: const Color(0xFFDCE6F0),
+                            iconColor: const Color(0xFF466A89),
                             onTap: () {
                               _comingSoon('Recent Reminder');
                             },
@@ -504,17 +415,14 @@ class _FarmerHomeScreenState extends State<FarmerHomeScreen> {
             ),
 
             // ================= BOTTOM NAVIGATION =================
-
             BottomNavigationBar(
               currentIndex: _selectedIndex,
               type: BottomNavigationBarType.fixed,
               backgroundColor: Colors.white,
               selectedItemColor: primaryGreen,
-              unselectedItemColor:
-                  const Color(0xFF7D8B83),
+              unselectedItemColor: const Color(0xFF7D8B83),
               selectedFontSize: 11,
               unselectedFontSize: 11,
-
               onTap: (index) {
                 if (index == 0) {
                   setState(() {
@@ -530,7 +438,6 @@ class _FarmerHomeScreenState extends State<FarmerHomeScreen> {
                   _comingSoon('Profile');
                 }
               },
-
               items: const [
                 BottomNavigationBarItem(
                   icon: Icon(Icons.home_rounded),
@@ -541,21 +448,15 @@ class _FarmerHomeScreenState extends State<FarmerHomeScreen> {
                   label: 'Animals',
                 ),
                 BottomNavigationBarItem(
-                  icon: Icon(
-                    Icons.medical_services_outlined,
-                  ),
+                  icon: Icon(Icons.medical_services_outlined),
                   label: 'Consult',
                 ),
                 BottomNavigationBarItem(
-                  icon: Icon(
-                    Icons.calendar_month_outlined,
-                  ),
+                  icon: Icon(Icons.calendar_month_outlined),
                   label: 'Appointments',
                 ),
                 BottomNavigationBarItem(
-                  icon: Icon(
-                    Icons.person_outline_rounded,
-                  ),
+                  icon: Icon(Icons.person_outline_rounded),
                   label: 'Profile',
                 ),
               ],
@@ -567,7 +468,6 @@ class _FarmerHomeScreenState extends State<FarmerHomeScreen> {
   }
 
   // ================= BANNER DESIGN =================
-
   Widget _buildBanner({
     required String image,
     required String title,
@@ -576,9 +476,7 @@ class _FarmerHomeScreenState extends State<FarmerHomeScreen> {
     required VoidCallback onTap,
   }) {
     return Padding(
-      padding: const EdgeInsets.symmetric(
-        horizontal: 20,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 20),
       child: GestureDetector(
         onTap: onTap,
         child: ClipRRect(
@@ -586,13 +484,32 @@ class _FarmerHomeScreenState extends State<FarmerHomeScreen> {
           child: Stack(
             fit: StackFit.expand,
             children: [
+              // ✅ Local Asset Image with error fallback
               Image.asset(
                 image,
                 fit: BoxFit.cover,
                 alignment: Alignment.center,
+                errorBuilder: (context, error, stackTrace) {
+                  return Container(
+                    decoration: const BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          Color(0xFF42B97A),
+                          Color(0xFF20B769),
+                          Color(0xFF176B43),
+                        ],
+                      ),
+                    ),
+                    child: const Center(
+                      child: Icon(Icons.image, size: 50, color: Colors.white),
+                    ),
+                  );
+                },
               ),
 
-              // Original banner gradient style.
+              // Gradient overlay
               Container(
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
@@ -611,15 +528,13 @@ class _FarmerHomeScreenState extends State<FarmerHomeScreen> {
                 top: isOriginalBanner ? 45 : 48,
                 right: 45,
                 child: Column(
-                  crossAxisAlignment:
-                      CrossAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       title,
                       style: TextStyle(
                         color: isOriginalBanner
-                            ? const Color.fromARGB(
-                                132, 255, 255, 255)
+                            ? const Color.fromARGB(132, 255, 255, 255)
                             : Colors.white,
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
@@ -636,7 +551,6 @@ class _FarmerHomeScreenState extends State<FarmerHomeScreen> {
 
                     if (subtitle.isNotEmpty) ...[
                       const SizedBox(height: 6),
-
                       Text(
                         subtitle,
                         style: const TextStyle(
@@ -666,7 +580,6 @@ class _FarmerHomeScreenState extends State<FarmerHomeScreen> {
   }
 
   // ================= HOME CARD =================
-
   Widget _buildHomeCard({
     required String title,
     required String subtitle,
@@ -683,10 +596,7 @@ class _FarmerHomeScreenState extends State<FarmerHomeScreen> {
         borderRadius: BorderRadius.circular(18),
         child: Container(
           width: double.infinity,
-          padding: const EdgeInsets.symmetric(
-            horizontal: 18,
-            vertical: 16,
-          ),
+          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
           decoration: BoxDecoration(
             color: backgroundColor,
             borderRadius: BorderRadius.circular(18),
@@ -698,22 +608,14 @@ class _FarmerHomeScreenState extends State<FarmerHomeScreen> {
                 height: 50,
                 decoration: BoxDecoration(
                   color: iconBackground,
-                  borderRadius:
-                      BorderRadius.circular(14),
+                  borderRadius: BorderRadius.circular(14),
                 ),
-                child: Icon(
-                  icon,
-                  color: iconColor,
-                  size: 26,
-                ),
+                child: Icon(icon, color: iconColor, size: 26),
               ),
-
               const SizedBox(width: 16),
-
               Expanded(
                 child: Column(
-                  crossAxisAlignment:
-                      CrossAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       title,
@@ -723,9 +625,7 @@ class _FarmerHomeScreenState extends State<FarmerHomeScreen> {
                         fontWeight: FontWeight.w600,
                       ),
                     ),
-
                     const SizedBox(height: 4),
-
                     Text(
                       subtitle,
                       style: const TextStyle(
@@ -736,12 +636,7 @@ class _FarmerHomeScreenState extends State<FarmerHomeScreen> {
                   ],
                 ),
               ),
-
-              Icon(
-                Icons.arrow_forward_ios_rounded,
-                color: iconColor,
-                size: 17,
-              ),
+              Icon(Icons.arrow_forward_ios_rounded, color: iconColor, size: 17),
             ],
           ),
         ),
@@ -751,12 +646,10 @@ class _FarmerHomeScreenState extends State<FarmerHomeScreen> {
 }
 
 // ================= CURVED HEADER =================
-
 class HomeHeaderClipper extends CustomClipper<Path> {
   @override
   Path getClip(Size size) {
     final path = Path();
-
     path.lineTo(0, 0);
     path.lineTo(size.width, 0);
     path.lineTo(size.width, size.height - 35);
@@ -776,14 +669,11 @@ class HomeHeaderClipper extends CustomClipper<Path> {
     );
 
     path.close();
-
     return path;
   }
 
   @override
-  bool shouldReclip(
-    CustomClipper<Path> oldClipper,
-  ) {
+  bool shouldReclip(CustomClipper<Path> oldClipper) {
     return false;
   }
 }

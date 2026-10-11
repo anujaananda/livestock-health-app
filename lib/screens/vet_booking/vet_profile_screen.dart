@@ -1,9 +1,11 @@
+// lib/screens/vet_booking/vet_profile_screen.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../models/vet_model.dart';
 import '../../services/auth_service.dart';
 import '../auth/login_screen.dart';
+import 'book_appointment_screen.dart';
 import 'edit_vet_profile_screen.dart';
 
 class VetProfileScreen extends StatefulWidget {
@@ -53,16 +55,41 @@ class _VetProfileScreenState extends State<VetProfileScreen> {
   String get _location =>
       widget.vet?.location ?? _profile?['location'] ?? 'Sri Lanka';
 
+  String get _district => widget.vet?.district ?? _profile?['district'] ?? '';
+
   int get _experience => widget.vet?.experience ?? _profile?['experience'] ?? 0;
 
   String get _phone => widget.vet?.phone ?? _profile?['phone'] ?? '';
 
   String get _email => widget.vet?.email ?? _profile?['email'] ?? '';
 
+  // ✅ FIX — Priority 1: vet passed, Priority 2: loaded profile
+  String? get _profileImageUrl {
+    if (widget.vet?.profileImageUrl != null &&
+        widget.vet!.profileImageUrl!.isNotEmpty) {
+      return widget.vet!.profileImageUrl;
+    }
+    return _profile?['profile_image_url'];
+  }
+
+  String get _bio =>
+      widget.vet?.bio ??
+      _profile?['bio'] ??
+      'Livestock specialist focused on animal healthcare, disease prevention, treatment and farm animal management.';
+
   @override
   Widget build(BuildContext context) {
     final authService = Provider.of<AuthService>(context);
     final isOwner = widget.vet == null;
+
+    final String imageUrl =
+        (_profileImageUrl != null && _profileImageUrl!.isNotEmpty)
+            ? _profileImageUrl!
+            : 'https://i.pravatar.cc/150?img=12';
+
+    final String locationText = _district.isNotEmpty && _district != 'Unknown'
+        ? '$_district, $_location'
+        : _location;
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -92,7 +119,7 @@ class _VetProfileScreenState extends State<VetProfileScreen> {
                 final result = await Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (_) => const EditVetProfileScreen(),
+                    builder: (_) => EditVetProfileScreen(vet: widget.vet),
                   ),
                 );
                 if (result == true) {
@@ -108,14 +135,15 @@ class _VetProfileScreenState extends State<VetProfileScreen> {
               child: Column(
                 children: [
                   const SizedBox(height: 24),
+
                   CircleAvatar(
                     radius: 50,
                     backgroundColor: const Color(0xFFE5F7EA),
-                    backgroundImage: NetworkImage(
-                      'https://i.pravatar.cc/150?img=12',
-                    ),
+                    backgroundImage: NetworkImage(imageUrl),
+                    onBackgroundImageError: (_, __) {},
                   ),
                   const SizedBox(height: 16),
+
                   Text(
                     _name,
                     style: const TextStyle(
@@ -125,6 +153,7 @@ class _VetProfileScreenState extends State<VetProfileScreen> {
                     ),
                   ),
                   const SizedBox(height: 4),
+
                   Text(
                     _specialization,
                     style: const TextStyle(
@@ -133,6 +162,7 @@ class _VetProfileScreenState extends State<VetProfileScreen> {
                     ),
                   ),
                   const SizedBox(height: 8),
+
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -143,7 +173,7 @@ class _VetProfileScreenState extends State<VetProfileScreen> {
                       ),
                       const SizedBox(width: 4),
                       Text(
-                        _location,
+                        locationText,
                         style: const TextStyle(
                           fontSize: 13,
                           color: Color(0xFF697A71),
@@ -152,6 +182,7 @@ class _VetProfileScreenState extends State<VetProfileScreen> {
                     ],
                   ),
                   const SizedBox(height: 8),
+
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -180,6 +211,7 @@ class _VetProfileScreenState extends State<VetProfileScreen> {
                     ],
                   ),
                   const SizedBox(height: 24),
+
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 20),
                     child: Row(
@@ -191,6 +223,7 @@ class _VetProfileScreenState extends State<VetProfileScreen> {
                     ),
                   ),
                   const SizedBox(height: 20),
+
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 20),
                     child: Column(
@@ -234,32 +267,102 @@ class _VetProfileScreenState extends State<VetProfileScreen> {
                     ),
                   ),
                   const SizedBox(height: 24),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          'About Doctor',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xFF1E3027),
-                          ),
+
+                  if (_bio.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF8FCF9),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: const Color(0xFFE5F0E9)),
                         ),
-                        const SizedBox(height: 8),
-                        const Text(
-                          'Livestock specialist focused on animal healthcare, disease prevention, treatment and farm animal management.',
-                          style: TextStyle(
-                            fontSize: 13,
-                            color: Color(0xFF697A71),
-                            height: 1.5,
-                          ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Container(
+                                  width: 32,
+                                  height: 32,
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFFE5F7EA),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: const Icon(
+                                    Icons.description_outlined,
+                                    color: primaryGreen,
+                                    size: 18,
+                                  ),
+                                ),
+                                const SizedBox(width: 10),
+                                const Text(
+                                  'About Me',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.bold,
+                                    color: Color(0xFF1E3027),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 10),
+                            Text(
+                              _bio,
+                              style: const TextStyle(
+                                fontSize: 13,
+                                color: Color(0xFF697A71),
+                                height: 1.5,
+                              ),
+                            ),
+                          ],
                         ),
-                      ],
+                      ),
                     ),
-                  ),
                   const SizedBox(height: 24),
+
+                  if (!isOwner && widget.vet != null) ...[
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: SizedBox(
+                        width: double.infinity,
+                        height: 55,
+                        child: ElevatedButton.icon(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) =>
+                                    BookAppointmentScreen(vet: widget.vet!),
+                              ),
+                            );
+                          },
+                          icon: const Icon(
+                            Icons.calendar_today,
+                            color: Colors.white,
+                            size: 20,
+                          ),
+                          label: const Text(
+                            'Book Appointment',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.white,
+                            ),
+                          ),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: primaryGreen,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 30),
+                  ],
 
                   if (isOwner) ...[
                     Padding(

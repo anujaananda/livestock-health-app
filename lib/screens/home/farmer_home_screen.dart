@@ -1,11 +1,34 @@
+// lib/screens/home/farmer_home_screen.dart
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
-// ================= VET BOOKING IMPORTS =================
+// ================= KAUSHALYA ගේ IMPORTS =================
+import '../farmer/my_animals_screen.dart';
+import '../farmer/health_guide_screen.dart';
+
+// ================= ඔයාගේ IMPORTS =================
 import '../vet_booking/find_vet_screen.dart';
 import '../vet_booking/my_appointments_screen.dart';
 import '../vet_booking/farmer_profile_screen.dart';
+
+// ================= NOTIFICATIONS & REMINDERS =================
+import '../notifications/notifications_screen.dart';
+import '../reminders/reminders_screen.dart';
+
+// ================= EMERGENCY =================
+import '../emergency/emergency_screen.dart';
+
+// ================= SETTINGS, HELP, ABOUT =================
+import '../settings/settings_screen.dart';
+import '../help/help_support_screen.dart';
+import '../about/about_screen.dart';
+
+// ================= AUTH =================
+import '../../services/auth_service.dart';
+import '../auth/login_screen.dart';
 
 class FarmerHomeScreen extends StatefulWidget {
   final String userName;
@@ -21,6 +44,9 @@ class _FarmerHomeScreenState extends State<FarmerHomeScreen> {
   Timer? _bannerTimer;
   int _currentBanner = 0;
   int _selectedIndex = 0;
+
+  // ✅ Profile image
+  String? _profileImageUrl;
 
   static const Color primaryGreen = Color(0xFF20B769);
   static const Color darkGreen = Color(0xFF176B43);
@@ -47,6 +73,30 @@ class _FarmerHomeScreenState extends State<FarmerHomeScreen> {
   void initState() {
     super.initState();
     _startBannerTimer();
+    _loadProfilePhoto();
+  }
+
+  // ================= ✅ LOAD PROFILE PHOTO =================
+  Future<void> _loadProfilePhoto() async {
+    try {
+      final authService = Provider.of<AuthService>(context, listen: false);
+      final userId = authService.currentUser!.id;
+      final supabase = Supabase.instance.client;
+
+      final data = await supabase
+          .from('profiles')
+          .select('profile_image_url')
+          .eq('id', userId)
+          .maybeSingle();
+
+      if (data != null && mounted) {
+        setState(() {
+          _profileImageUrl = data['profile_image_url'];
+        });
+      }
+    } catch (e) {
+      debugPrint('❌ Load photo error: $e');
+    }
   }
 
   void _startBannerTimer() {
@@ -71,7 +121,71 @@ class _FarmerHomeScreenState extends State<FarmerHomeScreen> {
 
   // ================= NAVIGATION METHODS =================
 
-  // ================= FIND A VET (Step 1) =================
+  void _openMyAnimals() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const MyAnimalsScreen()),
+    );
+  }
+
+  void _openHealthGuide(int index) {
+    if (index == 0) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => const HealthGuideScreen(
+            headerTitle: 'Nutrition for Healthy Animals',
+            imagePath: 'assets/images/farmer_home_banner.png',
+            title: 'Healthy Livestock',
+            subtitle: 'Stronger Tomorrow',
+            description: 'Good nutrition and proper animal care help livestock stay healthy and productive. Provide clean drinking water, appropriate feed and regular veterinary care.',
+            tips: [
+              'Provide clean drinking water every day.',
+              'Maintain a balanced feeding routine.',
+              'Monitor animal health regularly.',
+            ],
+          ),
+        ),
+      );
+    } else if (index == 1) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => const HealthGuideScreen(
+            headerTitle: 'Shelter & Hygiene',
+            imagePath: 'assets/images/shelter_banner.png',
+            title: 'Safe Shelter & Hygiene',
+            subtitle: 'A clean environment keeps animals healthy',
+            description: 'Proper shelter protects your animals from extreme weather, reduces stress and helps prevent the spread of diseases. Keep animal housing clean, dry and well-ventilated.',
+            tips: [
+              'Keep animal housing clean and dry.',
+              'Ensure proper ventilation.',
+              'Remove animal waste regularly.',
+            ],
+          ),
+        ),
+      );
+    } else if (index == 2) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => const HealthGuideScreen(
+            headerTitle: 'Vaccination & Prevention',
+            imagePath: 'assets/images/vaccination_banner.png',
+            title: 'Vaccination & Prevention',
+            subtitle: 'Prevent diseases, ensure productivity',
+            description: 'Vaccination helps protect livestock from preventable diseases. Consult a veterinarian about appropriate vaccination schedules and maintain accurate animal health records.',
+            tips: [
+              'Follow a veterinarian-approved schedule.',
+              'Maintain vaccination records.',
+              'Consult your vet for disease prevention.',
+            ],
+          ),
+        ),
+      );
+    }
+  }
+
   void _openFindVet() {
     Navigator.push(
       context,
@@ -79,46 +193,104 @@ class _FarmerHomeScreenState extends State<FarmerHomeScreen> {
     );
   }
 
-  // ================= MY APPOINTMENTS =================
   void _openMyAppointments() {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => const MyAppointmentsScreen()),
+      MaterialPageRoute(builder: (context) => MyAppointmentsScreen()),
     );
   }
 
-  // ================= FARMER PROFILE =================
   void _openFarmerProfile() {
     Navigator.push(
       context,
       MaterialPageRoute(builder: (context) => const FarmerProfileScreen()),
+    ).then((_) => _loadProfilePhoto());
+  }
+
+  void _openNotifications() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const NotificationsScreen()),
     );
   }
 
-  void _openMyAnimals() {
-    _comingSoon('My Animals');
+  void _openReminders() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const RemindersScreen()),
+    );
   }
 
-  void _openHealthGuide(int index) {
-    _comingSoon('Health Guide');
+  void _openEmergency() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const EmergencyScreen()),
+    );
   }
 
-  void _comingSoon(String feature) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('$feature will be added soon'),
-        behavior: SnackBarBehavior.floating,
-        backgroundColor: darkGreen,
+  void _openSettings() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const SettingsScreen()),
+    );
+  }
+
+  void _openHelpSupport() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const HelpSupportScreen()),
+    );
+  }
+
+  void _openAbout() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const AboutScreen()),
+    );
+  }
+
+  Future<void> _logout(BuildContext context) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text('Logout'),
+        content: const Text('Are you sure you want to logout?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text(
+              'Logout',
+              style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
+            ),
+          ),
+        ],
       ),
     );
+
+    if (confirm == true && context.mounted) {
+      final authService = Provider.of<AuthService>(context, listen: false);
+      await authService.signOut();
+
+      if (context.mounted) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const LoginScreen()),
+        );
+      }
+    }
   }
 
   // ================= BUILD =================
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF8FCF9),
+      drawer: _buildDrawer(context, widget.userName),
       body: SafeArea(
         child: Column(
           children: [
@@ -149,14 +321,17 @@ class _FarmerHomeScreenState extends State<FarmerHomeScreen> {
                           children: [
                             Row(
                               children: [
-                                IconButton(
-                                  onPressed: () => _comingSoon('Menu'),
-                                  padding: EdgeInsets.zero,
-                                  constraints: const BoxConstraints(),
-                                  icon: const Icon(
-                                    Icons.menu_rounded,
-                                    color: Colors.white,
-                                    size: 25,
+                                Builder(
+                                  builder: (context) => IconButton(
+                                    onPressed: () =>
+                                        Scaffold.of(context).openDrawer(),
+                                    padding: EdgeInsets.zero,
+                                    constraints: const BoxConstraints(),
+                                    icon: const Icon(
+                                      Icons.menu_rounded,
+                                      color: Colors.white,
+                                      size: 25,
+                                    ),
                                   ),
                                 ),
                                 const SizedBox(width: 14),
@@ -170,33 +345,33 @@ class _FarmerHomeScreenState extends State<FarmerHomeScreen> {
                                     ),
                                   ),
                                 ),
-                                Stack(
-                                  clipBehavior: Clip.none,
-                                  children: [
-                                    IconButton(
-                                      onPressed: () =>
-                                          _comingSoon('Notifications'),
-                                      padding: EdgeInsets.zero,
-                                      constraints: const BoxConstraints(),
-                                      icon: const Icon(
-                                        Icons.notifications_none_rounded,
-                                        color: Colors.white,
-                                        size: 27,
-                                      ),
-                                    ),
-                                    Positioned(
-                                      right: 1,
-                                      top: 0,
-                                      child: Container(
-                                        width: 7,
-                                        height: 7,
-                                        decoration: const BoxDecoration(
-                                          color: Color(0xFFE85D68),
-                                          shape: BoxShape.circle,
+                                GestureDetector(
+                                  onTap: _openNotifications,
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(8.0),
+                                    child: Stack(
+                                      clipBehavior: Clip.none,
+                                      children: [
+                                        const Icon(
+                                          Icons.notifications_none_rounded,
+                                          color: Colors.white,
+                                          size: 27,
                                         ),
-                                      ),
+                                        Positioned(
+                                          right: 1,
+                                          top: 0,
+                                          child: Container(
+                                            width: 7,
+                                            height: 7,
+                                            decoration: const BoxDecoration(
+                                              color: Color(0xFFE85D68),
+                                              shape: BoxShape.circle,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
                                     ),
-                                  ],
+                                  ),
                                 ),
                               ],
                             ),
@@ -276,7 +451,6 @@ class _FarmerHomeScreenState extends State<FarmerHomeScreen> {
                       padding: const EdgeInsets.symmetric(horizontal: 20),
                       child: Column(
                         children: [
-                          // ================= MY ANIMALS =================
                           _buildHomeCard(
                             title: 'My Animals',
                             subtitle: 'View and manage your animals',
@@ -288,7 +462,6 @@ class _FarmerHomeScreenState extends State<FarmerHomeScreen> {
                           ),
                           const SizedBox(height: 14),
 
-                          // ================= EMERGENCY =================
                           _buildHomeCard(
                             title: 'EMERGENCY',
                             subtitle: 'Contact a Vet Now',
@@ -296,11 +469,10 @@ class _FarmerHomeScreenState extends State<FarmerHomeScreen> {
                             backgroundColor: const Color(0xFFFFE8E8),
                             iconBackground: const Color(0xFFFFD7D7),
                             iconColor: const Color(0xFFD95360),
-                            onTap: () => _comingSoon('Emergency'),
+                            onTap: _openEmergency,
                           ),
                           const SizedBox(height: 14),
 
-                          // ================= CONSULT A VET → FIND A VET =================
                           _buildHomeCard(
                             title: 'Consult a Vet',
                             subtitle: 'Get professional advice',
@@ -308,12 +480,10 @@ class _FarmerHomeScreenState extends State<FarmerHomeScreen> {
                             backgroundColor: const Color(0xFFF0EBFA),
                             iconBackground: const Color(0xFFE4D9F5),
                             iconColor: const Color(0xFF7652A8),
-                            onTap: _openFindVet, // ✅ Find a Vet
+                            onTap: _openFindVet,
                           ),
-
                           const SizedBox(height: 14),
 
-                          // ================= APPOINTMENTS → MY APPOINTMENTS =================
                           _buildHomeCard(
                             title: 'Appointments',
                             subtitle: 'View and manage appointments',
@@ -321,12 +491,10 @@ class _FarmerHomeScreenState extends State<FarmerHomeScreen> {
                             backgroundColor: const Color(0xFFFCEFE5),
                             iconBackground: const Color(0xFFF7DFCD),
                             iconColor: const Color(0xFFB96832),
-                            onTap: _openMyAppointments, // ✅ My Appointments
+                            onTap: _openMyAppointments,
                           ),
-
                           const SizedBox(height: 14),
 
-                          // ================= RECENT REMINDER =================
                           _buildHomeCard(
                             title: 'Recent Reminder',
                             subtitle:
@@ -335,7 +503,7 @@ class _FarmerHomeScreenState extends State<FarmerHomeScreen> {
                             backgroundColor: const Color(0xFFEAF0F6),
                             iconBackground: const Color(0xFFDCE6F0),
                             iconColor: const Color(0xFF466A89),
-                            onTap: () => _comingSoon('Recent Reminder'),
+                            onTap: _openReminders,
                           ),
                           const SizedBox(height: 25),
                         ],
@@ -361,14 +529,11 @@ class _FarmerHomeScreenState extends State<FarmerHomeScreen> {
                 } else if (index == 1) {
                   _openMyAnimals();
                 } else if (index == 2) {
-                  // ================= CONSULT TAB → FIND A VET =================
-                  _openFindVet(); // ✅ Find a Vet
+                  _openFindVet();
                 } else if (index == 3) {
-                  // ================= APPOINTMENTS TAB → MY APPOINTMENTS =================
-                  _openMyAppointments(); // ✅ My Appointments
+                  _openMyAppointments();
                 } else if (index == 4) {
-                  // ================= PROFILE TAB → FARMER PROFILE =================
-                  _openFarmerProfile(); // ✅ Farmer Profile
+                  _openFarmerProfile();
                 }
               },
               items: const [
@@ -397,6 +562,243 @@ class _FarmerHomeScreenState extends State<FarmerHomeScreen> {
           ],
         ),
       ),
+    );
+  }
+
+  // ================= DRAWER (MENU) =================
+  Widget _buildDrawer(BuildContext context, String userName) {
+    return Drawer(
+      backgroundColor: Colors.white,
+      child: SafeArea(
+        child: Column(
+          children: [
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(20),
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    Color(0xFF42B97A),
+                    Color(0xFF6DCE96),
+                    Color(0xFF91DDB0),
+                  ],
+                ),
+              ),
+              child: Row(
+                children: [
+                  // ✅ FIXED — CircleAvatar (null-safe)
+                  Container(
+                    padding: const EdgeInsets.all(2),
+                    decoration: const BoxDecoration(
+                      color: Colors.white,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Builder(
+                      builder: (context) {
+                        final hasImage =
+                            _profileImageUrl != null &&
+                            _profileImageUrl!.isNotEmpty;
+
+                        return CircleAvatar(
+                          radius: 28,
+                          backgroundColor: Colors.white,
+                          backgroundImage: hasImage
+                              ? NetworkImage(_profileImageUrl!)
+                              : null,
+                          onBackgroundImageError: hasImage ? (_, __) {} : null,
+                          child: hasImage
+                              ? null
+                              : const Icon(
+                                  Icons.person,
+                                  color: primaryGreen,
+                                  size: 30,
+                                ),
+                        );
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          userName,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 4),
+                        const Text(
+                          'Farmer',
+                          style: TextStyle(
+                            color: Color(0xFFE5F7EB),
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 10),
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                children: [
+                  _buildDrawerItem(
+                    icon: Icons.home_rounded,
+                    title: 'Home',
+                    onTap: () {
+                      Navigator.pop(context);
+                      setState(() => _selectedIndex = 0);
+                    },
+                  ),
+                  _buildDrawerItem(
+                    icon: Icons.pets_rounded,
+                    title: 'My Animals',
+                    onTap: () {
+                      Navigator.pop(context);
+                      _openMyAnimals();
+                    },
+                  ),
+                  _buildDrawerItem(
+                    icon: Icons.medical_services_outlined,
+                    title: 'Consult a Vet',
+                    onTap: () {
+                      Navigator.pop(context);
+                      _openFindVet();
+                    },
+                  ),
+                  _buildDrawerItem(
+                    icon: Icons.calendar_month_outlined,
+                    title: 'Appointments',
+                    onTap: () {
+                      Navigator.pop(context);
+                      _openMyAppointments();
+                    },
+                  ),
+                  _buildDrawerItem(
+                    icon: Icons.campaign_outlined,
+                    title: 'Reminders',
+                    onTap: () {
+                      Navigator.pop(context);
+                      _openReminders();
+                    },
+                  ),
+                  _buildDrawerItem(
+                    icon: Icons.notifications_none_rounded,
+                    title: 'Notifications',
+                    onTap: () {
+                      Navigator.pop(context);
+                      _openNotifications();
+                    },
+                  ),
+                  _buildDrawerItem(
+                    icon: Icons.emergency_rounded,
+                    title: 'Emergency',
+                    onTap: () {
+                      Navigator.pop(context);
+                      _openEmergency();
+                    },
+                  ),
+                  const Divider(height: 30),
+                  _buildDrawerItem(
+                    icon: Icons.person_outline_rounded,
+                    title: 'My Profile',
+                    onTap: () {
+                      Navigator.pop(context);
+                      _openFarmerProfile();
+                    },
+                  ),
+                  _buildDrawerItem(
+                    icon: Icons.settings_outlined,
+                    title: 'Settings',
+                    onTap: () {
+                      Navigator.pop(context);
+                      _openSettings();
+                    },
+                  ),
+                  _buildDrawerItem(
+                    icon: Icons.help_outline_rounded,
+                    title: 'Help & Support',
+                    onTap: () {
+                      Navigator.pop(context);
+                      _openHelpSupport();
+                    },
+                  ),
+                  _buildDrawerItem(
+                    icon: Icons.info_outline_rounded,
+                    title: 'About',
+                    onTap: () {
+                      Navigator.pop(context);
+                      _openAbout();
+                    },
+                  ),
+                  const Divider(height: 30),
+                  _buildDrawerItem(
+                    icon: Icons.logout_rounded,
+                    title: 'Logout',
+                    titleColor: Colors.red,
+                    iconColor: Colors.red,
+                    onTap: () {
+                      Navigator.pop(context);
+                      _logout(context);
+                    },
+                  ),
+                  const SizedBox(height: 20),
+                ],
+              ),
+            ),
+            const Padding(
+              padding: EdgeInsets.all(16),
+              child: Text(
+                'Version 1.0.0',
+                style: TextStyle(fontSize: 11, color: Color(0xFF9CA3AF)),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ================= DRAWER ITEM =================
+  Widget _buildDrawerItem({
+    required IconData icon,
+    required String title,
+    required VoidCallback onTap,
+    Color? titleColor,
+    Color? iconColor,
+  }) {
+    return ListTile(
+      contentPadding: const EdgeInsets.symmetric(horizontal: 12),
+      leading: Container(
+        width: 40,
+        height: 40,
+        decoration: BoxDecoration(
+          color: (iconColor ?? primaryGreen).withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Icon(icon, color: iconColor ?? primaryGreen, size: 20),
+      ),
+      title: Text(
+        title,
+        style: TextStyle(
+          fontSize: 14,
+          fontWeight: FontWeight.w600,
+          color: titleColor ?? const Color(0xFF1E3027),
+        ),
+      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      onTap: onTap,
     );
   }
 
